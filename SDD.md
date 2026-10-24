@@ -12,7 +12,7 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
 2. **Split-Stream Task Engine ("Daily Pulse"):** Today's Focus vs. Backlog/Orbit, multi-line notes, 3-state execution (`Done`, `Postponed -> Tomorrow`, `Canceled`), and drag-reordering.
 3. **Unified Entertainment Tracker:** Books, TV Shows, Movies, and Video Games with metric progress tracking, half-point gradient ratings (1.0 - 10.0), cover art editing, and on-hold states.
 4. **Adaptive Aesthetics & Themes:** Built-in dynamic color vibe themes + custom accent capability:
-   - **Purples:** Deep Amethyst (`#9333ea`), Electric Lavender (`#c084fc`), Cyber Violet (`#8b5cf6`).
+   - **Purples:** Deep Amethyst (`#9333ea`), Deep Lavender High-Contrast (`#e9d5ff` on obsidian violet), Imperial Purple & Gold (`#9333ea` + `#fbbf24`), Ultraviolet Twilight (`#9333ea` + `#f97316`), Cyber Violet (`#8b5cf6`).
    - **Oranges:** Solar Tangerine (`#ea580c`), Sunset Amber (`#f97316`).
    - **Snowy / Frost:** Arctic Frost (`#38bdf8` / icy frost white `#f0f9ff`).
    - **Others:** Isfahan Cyan / Persian Turquoise (`#00e5ff`), Emerald Cyan (`#10b981`), Nordic Slate (`#60a5fa`).
