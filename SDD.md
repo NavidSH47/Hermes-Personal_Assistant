@@ -16,7 +16,14 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
    - **Oranges:** Solar Tangerine (`#ea580c`), Sunset Amber (`#f97316`).
    - **Snowy / Frost:** Arctic Frost (`#38bdf8` / icy frost white `#f0f9ff`).
    - **Others:** Isfahan Cyan / Persian Turquoise (`#00e5ff`), Emerald Cyan (`#10b981`), Nordic Slate (`#60a5fa`).
-5. **Streamlined Navigation:** Unified top app bar combining brand identity, vibe picker, and segmented switcher (`📝 Daily Pulse` / `🎬 Entertainment`). No duplicate bottom navigation bars.
+5. **Dynamic Typography & Font Manager:** Built-in font family selector allowing instant runtime font switching:
+   - **Default Sans:** Modern clean system font.
+   - **Comic Sans:** Playful, casual, and friendly typography (`Comic Sans MS` / `Comic Neue`).
+   - **Rounded Bold:** Smooth, friendly soft-cornered font (`Arial Rounded MT Bold` / `Quicksand`).
+   - **Tech Mono:** Code/terminal fixed-width styling (`Cascadia Code` / `Fira Code` / `Consolas`).
+   - **Editorial Serif:** Classic literary typography (`Georgia` / `Cambria`).
+   - **Vazirmatn:** Native Persian/Solar Hijri typography optimized for bilingual rendering.
+6. **Streamlined Navigation:** Unified top app bar combining brand identity, vibe picker, font manager, and segmented switcher (`📝 Daily Pulse` / `🎬 Entertainment`). No duplicate bottom navigation bars.
 
 ---
 

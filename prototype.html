@@ -249,7 +249,7 @@
     }
 
     /* Vibe Palette Popover */
-    .vibe-drawer {
+    .vibe-drawer, .font-drawer {
       position: absolute;
       top: 64px;
       right: 16px;
@@ -262,10 +262,40 @@
       flex-direction: column;
       gap: 10px;
       z-index: 50;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
     }
-    .vibe-drawer.open {
+    .vibe-drawer.open, .font-drawer.open {
       display: flex;
+    }
+    .font-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .font-chip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      transition: all 0.15s;
+    }
+    .font-chip:hover, .font-chip.active {
+      border-color: var(--accent-primary);
+      background: rgba(255,255,255,0.06);
+    }
+    .font-chip-title {
+      font-weight: 700;
+    }
+    .font-chip-preview {
+      font-size: 0.72rem;
+      color: var(--text-muted);
     }
     .vibe-drawer-title {
       font-size: 0.8rem;
@@ -1031,10 +1061,16 @@
         <div class="brand-title">
           <span>⚡ NSH Assistant</span>
         </div>
-        <button class="vibe-picker-btn" id="vibeToggleBtn" title="Customize Color Vibe">
-          <span class="vibe-dot"></span>
-          <span id="currentVibeName">Deep Amethyst</span>
-        </button>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="vibe-picker-btn" id="fontToggleBtn" title="Customize Font Family">
+            <span>🔤</span>
+            <span id="currentFontName">Default</span>
+          </button>
+          <button class="vibe-picker-btn" id="vibeToggleBtn" title="Customize Color Vibe">
+            <span class="vibe-dot"></span>
+            <span id="currentVibeName">Deep Amethyst</span>
+          </button>
+        </div>
       </div>
 
       <!-- Segment Tabs (Directly in topbar) -->
@@ -1047,6 +1083,40 @@
         </button>
       </nav>
     </header>
+
+    <!-- FONT MANAGER DRAWER -->
+    <div class="font-drawer" id="fontDrawer">
+      <div class="vibe-drawer-title">
+        <span>Typography & Font Style</span>
+        <span style="font-size: 0.65rem; color: var(--accent-primary);">Instant Preview</span>
+      </div>
+      <div class="font-options">
+        <div class="font-chip active" data-font="default" data-label="Default Sans" data-family='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Vazirmatn", sans-serif'>
+          <span class="font-chip-title" style="font-family: -apple-system, sans-serif;">Default Sans</span>
+          <span class="font-chip-preview" style="font-family: -apple-system, sans-serif;">Modern system clean</span>
+        </div>
+        <div class="font-chip" data-font="comic" data-label="Comic Sans" data-family='"Comic Sans MS", "Comic Neue", cursive, sans-serif'>
+          <span class="font-chip-title" style="font-family: 'Comic Sans MS', cursive;">Comic Sans</span>
+          <span class="font-chip-preview" style="font-family: 'Comic Sans MS', cursive;">Playful, casual & relaxed</span>
+        </div>
+        <div class="font-chip" data-font="rounded" data-label="Rounded Bold" data-family='"Arial Rounded MT Bold", "Quicksand", "Nunito", sans-serif'>
+          <span class="font-chip-title" style="font-family: 'Arial Rounded MT Bold', sans-serif;">Rounded Bold</span>
+          <span class="font-chip-preview" style="font-family: 'Arial Rounded MT Bold', sans-serif;">Smooth, soft corners</span>
+        </div>
+        <div class="font-chip" data-font="mono" data-label="Tech Mono" data-family='"Cascadia Code", "Fira Code", Consolas, monospace'>
+          <span class="font-chip-title" style="font-family: Consolas, monospace;">Tech Mono</span>
+          <span class="font-chip-preview" style="font-family: Consolas, monospace;">Developer & terminal look</span>
+        </div>
+        <div class="font-chip" data-font="serif" data-label="Editorial Serif" data-family='Georgia, Cambria, "Times New Roman", serif'>
+          <span class="font-chip-title" style="font-family: Georgia, serif;">Editorial Serif</span>
+          <span class="font-chip-preview" style="font-family: Georgia, serif;">Classic bookish elegance</span>
+        </div>
+        <div class="font-chip" data-font="vazir" data-label="Vazirmatn" data-family='"Vazirmatn", Tahoma, sans-serif'>
+          <span class="font-chip-title" style="font-family: Tahoma, sans-serif;">Vazirmatn (وزیر)</span>
+          <span class="font-chip-preview" style="font-family: Tahoma, sans-serif;">Persian & Latin typography</span>
+        </div>
+      </div>
+    </div>
 
     <!-- COLOR VIBE DRAWER -->
     <div class="vibe-drawer" id="vibeDrawer">
@@ -1492,14 +1562,30 @@
     const currentVibeName = document.getElementById('currentVibeName');
     const vibeChips = document.querySelectorAll('.vibe-chip');
 
+    // --- FONT MANAGER ---
+    const fontToggleBtn = document.getElementById('fontToggleBtn');
+    const fontDrawer = document.getElementById('fontDrawer');
+    const currentFontName = document.getElementById('currentFontName');
+    const fontChips = document.querySelectorAll('.font-chip');
+
     vibeToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      fontDrawer.classList.remove('open');
       vibeDrawer.classList.toggle('open');
+    });
+
+    fontToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      vibeDrawer.classList.remove('open');
+      fontDrawer.classList.toggle('open');
     });
 
     document.addEventListener('click', (e) => {
       if (!vibeDrawer.contains(e.target) && e.target !== vibeToggleBtn) {
         vibeDrawer.classList.remove('open');
+      }
+      if (!fontDrawer.contains(e.target) && e.target !== fontToggleBtn) {
+        fontDrawer.classList.remove('open');
       }
     });
 
@@ -1512,6 +1598,18 @@
         document.body.setAttribute('data-vibe', vibe);
         currentVibeName.textContent = label;
         vibeDrawer.classList.remove('open');
+      });
+    });
+
+    fontChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        fontChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const family = chip.getAttribute('data-family');
+        const label = chip.getAttribute('data-label');
+        document.documentElement.style.setProperty('--font-family', family);
+        currentFontName.textContent = label;
+        fontDrawer.classList.remove('open');
       });
     });
 
