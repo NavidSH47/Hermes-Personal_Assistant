@@ -36,22 +36,29 @@
     }
 
     /* Color Vibe Themes */
-    body[data-vibe="emerald-cyan"] {
-      --bg-canvas: #0d1314;
-      --bg-surface: #141f21;
-      --bg-surface-elevated: #1e2e31;
-      --accent-primary: #10b981;
-      --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-      --accent-glow: rgba(16, 185, 129, 0.25);
+    /* 1. Deep Amethyst (Rich Purple) */
+    body[data-vibe="deep-amethyst"] {
+      --bg-canvas: #0c0714;
+      --bg-surface: #150d22;
+      --bg-surface-elevated: #221537;
+      --border-subtle: rgba(168, 85, 247, 0.15);
+      --border-focus: rgba(192, 132, 252, 0.35);
+      --accent-primary: #a855f7;
+      --accent-gradient: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+      --accent-glow: rgba(168, 85, 247, 0.35);
     }
-    body[data-vibe="persian-turquoise"] {
-      --bg-canvas: #091319;
-      --bg-surface: #0f1f28;
-      --bg-surface-elevated: #162d3a;
-      --accent-primary: #00bcd4;
-      --accent-gradient: linear-gradient(135deg, #00e5ff 0%, #ff6b8b 100%);
-      --accent-glow: rgba(0, 229, 255, 0.25);
+    /* 2. Electric Lavender (Soft Violet Glow) */
+    body[data-vibe="electric-lavender"] {
+      --bg-canvas: #100b1a;
+      --bg-surface: #1a1228;
+      --bg-surface-elevated: #271c3c;
+      --border-subtle: rgba(216, 180, 254, 0.15);
+      --border-focus: rgba(216, 180, 254, 0.35);
+      --accent-primary: #c084fc;
+      --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #e879f9 100%);
+      --accent-glow: rgba(192, 132, 252, 0.3);
     }
+    /* 3. Cyber Violet */
     body[data-vibe="cyber-violet"] {
       --bg-canvas: #100d1a;
       --bg-surface: #191428;
@@ -60,6 +67,18 @@
       --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
       --accent-glow: rgba(139, 92, 246, 0.25);
     }
+    /* 4. Solar Tangerine (Citrus Orange) */
+    body[data-vibe="solar-tangerine"] {
+      --bg-canvas: #170b03;
+      --bg-surface: #261307;
+      --bg-surface-elevated: #381c0c;
+      --border-subtle: rgba(251, 146, 60, 0.15);
+      --border-focus: rgba(251, 146, 60, 0.35);
+      --accent-primary: #fb923c;
+      --accent-gradient: linear-gradient(135deg, #ea580c 0%, #fbbf24 100%);
+      --accent-glow: rgba(251, 146, 60, 0.35);
+    }
+    /* 5. Sunset Amber */
     body[data-vibe="sunset-amber"] {
       --bg-canvas: #15110d;
       --bg-surface: #221a14;
@@ -68,6 +87,39 @@
       --accent-gradient: linear-gradient(135deg, #f97316 0%, #f43f5e 100%);
       --accent-glow: rgba(249, 115, 22, 0.25);
     }
+    /* 6. Arctic Frost (Snowy Ice & Silver Frost) */
+    body[data-vibe="arctic-frost"] {
+      --bg-canvas: #090e17;
+      --bg-surface: #101926;
+      --bg-surface-elevated: #182538;
+      --border-subtle: rgba(224, 242, 254, 0.14);
+      --border-focus: rgba(224, 242, 254, 0.35);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-primary: #38bdf8;
+      --accent-gradient: linear-gradient(135deg, #f0f9ff 0%, #38bdf8 60%, #818cf8 100%);
+      --accent-glow: rgba(56, 189, 248, 0.35);
+    }
+    /* 7. Emerald Cyan */
+    body[data-vibe="emerald-cyan"] {
+      --bg-canvas: #0d1314;
+      --bg-surface: #141f21;
+      --bg-surface-elevated: #1e2e31;
+      --accent-primary: #10b981;
+      --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      --accent-glow: rgba(16, 185, 129, 0.25);
+    }
+    /* 8. Persian Turquoise */
+    body[data-vibe="persian-turquoise"] {
+      --bg-canvas: #091319;
+      --bg-surface: #0f1f28;
+      --bg-surface-elevated: #162d3a;
+      --accent-primary: #00bcd4;
+      --accent-gradient: linear-gradient(135deg, #00e5ff 0%, #ff6b8b 100%);
+      --accent-glow: rgba(0, 229, 255, 0.25);
+    }
+    /* 9. Nordic Slate */
     body[data-vibe="minimal-nordic"] {
       --bg-canvas: #121417;
       --bg-surface: #1b1e23;
@@ -111,15 +163,21 @@
       position: relative;
     }
 
-    /* Top App Bar & Vibe Switcher */
+    /* Top Unified App Bar */
     .top-bar {
-      padding: 18px 20px 14px;
+      padding: 16px 20px 14px;
       background: var(--bg-surface);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .top-bar-header {
+      display: flex;
       justify-content: space-between;
       align-items: center;
-      z-index: 10;
     }
 
     .brand-title {
@@ -189,6 +247,9 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
+      max-height: 290px;
+      overflow-y: auto;
+      padding-right: 2px;
     }
     .vibe-chip {
       background: var(--bg-surface);
@@ -929,40 +990,78 @@
     }
   </style>
 </head>
-<body data-vibe="emerald-cyan">
+<body data-vibe="deep-amethyst">
 
   <div class="app-viewport">
     
-    <!-- TOP BAR -->
+    <!-- TOP UNIFIED APP BAR (Segment tabs inside, footbar eliminated) -->
     <header class="top-bar">
-      <div class="brand-title">
-        <span>⚡ PulseAssistant</span>
+      <div class="top-bar-header">
+        <div class="brand-title">
+          <span>⚡ PulseAssistant</span>
+        </div>
+        <button class="vibe-picker-btn" id="vibeToggleBtn" title="Customize Color Vibe">
+          <span class="vibe-dot"></span>
+          <span id="currentVibeName">Deep Amethyst</span>
+        </button>
       </div>
-      <button class="vibe-picker-btn" id="vibeToggleBtn" title="Customize Color Vibe">
-        <span class="vibe-dot"></span>
-        <span id="currentVibeName">Emerald / Cyan</span>
-      </button>
+
+      <!-- Segment Tabs (Directly in topbar) -->
+      <nav class="tab-bar">
+        <button class="tab-btn active" id="tabNotesBtn">
+          📝 Daily Pulse
+        </button>
+        <button class="tab-btn" id="tabEntertainmentBtn">
+          🎬 Entertainment
+        </button>
+      </nav>
     </header>
 
     <!-- COLOR VIBE DRAWER -->
     <div class="vibe-drawer" id="vibeDrawer">
-      <div class="vibe-drawer-title">Choose Color Vibe</div>
+      <div class="vibe-drawer-title">
+        <span>Color Vibes & Themes</span>
+        <span style="font-size: 0.65rem; color: var(--accent-primary);">Live Switch</span>
+      </div>
       <div class="vibe-options">
-        <div class="vibe-chip active" data-vibe="emerald-cyan" data-label="Emerald / Cyan">
-          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #10b981, #06b6d4)"></span>
-          <span>Emerald Cyan</span>
+        <!-- Purples -->
+        <div class="vibe-chip active" data-vibe="deep-amethyst" data-label="Deep Amethyst">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #9333ea, #c084fc)"></span>
+          <span>Deep Amethyst</span>
         </div>
-        <div class="vibe-chip" data-vibe="persian-turquoise" data-label="Persian Turquoise">
-          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #00e5ff, #ff6b8b)"></span>
-          <span>Isfahan Cyan</span>
+        <div class="vibe-chip" data-vibe="electric-lavender" data-label="Electric Lavender">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #7c3aed, #e879f9)"></span>
+          <span>Electric Lavender</span>
         </div>
         <div class="vibe-chip" data-vibe="cyber-violet" data-label="Cyber Violet">
           <span class="vibe-color-sample" style="background: linear-gradient(135deg, #8b5cf6, #ec4899)"></span>
           <span>Cyber Violet</span>
         </div>
+
+        <!-- Oranges -->
+        <div class="vibe-chip" data-vibe="solar-tangerine" data-label="Solar Tangerine">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #ea580c, #fbbf24)"></span>
+          <span>Solar Tangerine</span>
+        </div>
         <div class="vibe-chip" data-vibe="sunset-amber" data-label="Sunset Amber">
           <span class="vibe-color-sample" style="background: linear-gradient(135deg, #f97316, #f43f5e)"></span>
           <span>Sunset Amber</span>
+        </div>
+
+        <!-- Snowy / Frost -->
+        <div class="vibe-chip" data-vibe="arctic-frost" data-label="Arctic Frost">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #f0f9ff, #38bdf8)"></span>
+          <span>Arctic Frost</span>
+        </div>
+
+        <!-- Cyan / Green / Slate -->
+        <div class="vibe-chip" data-vibe="persian-turquoise" data-label="Persian Turquoise">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #00e5ff, #ff6b8b)"></span>
+          <span>Isfahan Cyan</span>
+        </div>
+        <div class="vibe-chip" data-vibe="emerald-cyan" data-label="Emerald Cyan">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #10b981, #06b6d4)"></span>
+          <span>Emerald Cyan</span>
         </div>
         <div class="vibe-chip" data-vibe="minimal-nordic" data-label="Nordic Slate">
           <span class="vibe-color-sample" style="background: linear-gradient(135deg, #60a5fa, #a78bfa)"></span>
@@ -973,16 +1072,6 @@
 
     <!-- MAIN SCROLLABLE BODY -->
     <main class="content-area">
-
-      <!-- TOP SWITCHER: NOTES vs ENTERTAINMENT -->
-      <nav class="tab-bar">
-        <button class="tab-btn active" id="tabNotesBtn">
-          📝 Daily Pulse
-        </button>
-        <button class="tab-btn" id="tabEntertainmentBtn">
-          🎬 Entertainment
-        </button>
-      </nav>
 
       <!-- ================= SECTION 1: QUICK NOTES & SHAMSI ================= -->
       <div id="sectionNotes" class="view-section">
@@ -1342,22 +1431,6 @@
 
     </main>
 
-    <!-- BOTTOM APP BAR (Android Companion style) -->
-    <footer class="bottom-nav">
-      <button class="nav-item active" onclick="switchMainTab('notes')">
-        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-        <span>Daily Pulse</span>
-      </button>
-      <button class="nav-item" onclick="switchMainTab('entertainment')">
-        <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
-        <span>Media</span>
-      </button>
-      <button class="nav-item" onclick="alert('Settings: Shamsi Holidays Manager, Custom Birthdays, and Backup')">
-        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-        <span>Calendar</span>
-      </button>
-    </footer>
-
     <!-- ADD TASK BOTTOM SHEET MODAL -->
     <div class="modal-backdrop" id="addTaskModal">
       <div class="modal-sheet">
@@ -1403,12 +1476,11 @@
       });
     });
 
-    // --- TAB SWITCHER ---
+    // --- TAB SWITCHER (TOP BAR SEGMENTS ONLY) ---
     const tabNotesBtn = document.getElementById('tabNotesBtn');
     const tabEntertainmentBtn = document.getElementById('tabEntertainmentBtn');
     const sectionNotes = document.getElementById('sectionNotes');
     const sectionEntertainment = document.getElementById('sectionEntertainment');
-    const navItems = document.querySelectorAll('.nav-item');
 
     function switchMainTab(tab) {
       if (tab === 'notes') {
@@ -1416,15 +1488,11 @@
         tabEntertainmentBtn.classList.remove('active');
         sectionNotes.classList.remove('hidden');
         sectionEntertainment.classList.add('hidden');
-        navItems[0].classList.add('active');
-        navItems[1].classList.remove('active');
       } else {
         tabEntertainmentBtn.classList.add('active');
         tabNotesBtn.classList.remove('active');
         sectionEntertainment.classList.remove('hidden');
         sectionNotes.classList.add('hidden');
-        navItems[1].classList.add('active');
-        navItems[0].classList.remove('active');
       }
     }
 
