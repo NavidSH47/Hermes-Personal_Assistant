@@ -1,5 +1,5 @@
 # Software Design Document (SDD)
-## Project: PulseAssistant (Lightweight Android Personal Assistant)
+## Project: NSH Assistant (Lightweight Android Personal Assistant)
 **Version:** 1.0.0  
 **Target Platform:** Android (API 26+)  
 **Repository:** Local git repository initialized (`main`)
@@ -7,7 +7,7 @@
 ---
 
 ## 1. System Overview & Core Principles
-PulseAssistant is a zero-latency, local-first daily companion combining:
+NSH Assistant is a zero-latency, local-first daily companion combining:
 1. **Contextual Day-Planner & Shamsi Agenda:** Solar Hijri calendar integration, official holidays, custom birthdays/events with action checkpoints.
 2. **Split-Stream Task Engine ("Daily Pulse"):** Today's Focus vs. Backlog/Orbit, multi-line notes, 3-state execution (`Done`, `Postponed -> Tomorrow`, `Canceled`), and drag-reordering.
 3. **Unified Entertainment Tracker:** Books, TV Shows, Movies, and Video Games with metric progress tracking, half-point gradient ratings (1.0 - 10.0), cover art editing, and on-hold states.
@@ -27,7 +27,7 @@ PulseAssistant is a zero-latency, local-first daily companion combining:
 | **React Native (Expo)** | Instant live testing on physical Android via Expo Go (scan QR code, zero Android Studio setup required), modern TS/React, instant web preview. | Relies on JS bridge (now minimal with New Architecture). | **Top Pick for rapid development & ease of running** |
 | **Kotlin + Jetpack Compose** | Pure 100% native Android, modern declarative UI. | Heavy Gradle build times, complex dev environment setup. | Best if 100% native Kotlin is strictly required |
 | **Flutter (Dart)** | High-performance 120fps Skia/Impeller canvas, mature Shamsi packages (`shamsi_date`). | Learning Dart required. | Solid cross-platform pick |
-| **NestJS** | Enterprise server-side framework (Node.js/TS). | Not for mobile apps; server backend only. PulseAssistant is local-first. | N/A (Client does not require a remote server) |
+| **NestJS** | Enterprise server-side framework (Node.js/TS). | Not for mobile apps; server backend only. NSH Assistant is local-first. | N/A (Client does not require a remote server) |
 
 ---
 
