@@ -85,7 +85,7 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
 ### 4.1 Daily Pulse & Shamsi Agenda
 - Pinned Agenda Header displaying Solar Hijri date (e.g. `جمعه ۲۳ آبان ۱۴۰۳`).
 - Event and holiday chips with action checkpoints `[ ]` / `[✓]` (e.g. Mary's Birthday -> call or send gift).
-- Mini Shamsi month calendar drawer.
+- **Native RTL Calendar Grid:** The Shamsi calendar drawer and month views flow strictly **Right-to-Left (RTL)** from Saturday (`شنبه`, far right) to Friday (`جمعه`, far left with red holiday highlight), matching standard Persian calendar conventions.
 - Two distinct task sections:
   - **Today's Focus:** Tasks scheduled for today, featuring three-state actions (`Done`, `Tomorrow`, `Cancel`).
   - **Orbit / Backlog:** Floating general tasks with a 1-tap "Assign to Today" action.
