@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseAssistant - Interactive Prototype</title>
+  <style>
+    :root {
+      /* Dynamic Theme Variables */
+      --bg-canvas: #0e1117;
+      --bg-surface: #161b22;
+      --bg-surface-elevated: #212836;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(255, 255, 255, 0.2);
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --text-dim: #6e7681;
+      
+      --accent-primary: #10b981;
+      --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      --accent-glow: rgba(16, 185, 129, 0.25);
+      
+      --tag-holiday-bg: rgba(245, 158, 11, 0.15);
+      --tag-holiday-border: rgba(245, 158, 11, 0.4);
+      --tag-holiday-text: #fbbf24;
+
+      --tag-bday-bg: rgba(236, 72, 153, 0.15);
+      --tag-bday-border: rgba(236, 72, 153, 0.4);
+      --tag-bday-text: #f472b6;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Vazirmatn", Helvetica, Arial, sans-serif;
+    }
+
+    /* Color Vibe Themes */
+    body[data-vibe="emerald-cyan"] {
+      --bg-canvas: #0d1314;
+      --bg-surface: #141f21;
+      --bg-surface-elevated: #1e2e31;
+      --accent-primary: #10b981;
+      --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      --accent-glow: rgba(16, 185, 129, 0.25);
+    }
+    body[data-vibe="persian-turquoise"] {
+      --bg-canvas: #091319;
+      --bg-surface: #0f1f28;
+      --bg-surface-elevated: #162d3a;
+      --accent-primary: #00bcd4;
+      --accent-gradient: linear-gradient(135deg, #00e5ff 0%, #ff6b8b 100%);
+      --accent-glow: rgba(0, 229, 255, 0.25);
+    }
+    body[data-vibe="cyber-violet"] {
+      --bg-canvas: #100d1a;
+      --bg-surface: #191428;
+      --bg-surface-elevated: #241d39;
+      --accent-primary: #8b5cf6;
+      --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+      --accent-glow: rgba(139, 92, 246, 0.25);
+    }
+    body[data-vibe="sunset-amber"] {
+      --bg-canvas: #15110d;
+      --bg-surface: #221a14;
+      --bg-surface-elevated: #31261d;
+      --accent-primary: #f97316;
+      --accent-gradient: linear-gradient(135deg, #f97316 0%, #f43f5e 100%);
+      --accent-glow: rgba(249, 115, 22, 0.25);
+    }
+    body[data-vibe="minimal-nordic"] {
+      --bg-canvas: #121417;
+      --bg-surface: #1b1e23;
+      --bg-surface-elevated: #262a32;
+      --accent-primary: #60a5fa;
+      --accent-gradient: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      --accent-glow: rgba(96, 165, 250, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg-canvas);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 24px 16px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* Outer Wrapper & Layout */
+    .app-viewport {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 36px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      height: 900px;
+      position: relative;
+    }
+
+    /* Top App Bar & Vibe Switcher */
+    .top-bar {
+      padding: 18px 20px 14px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .vibe-picker-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      border-radius: var(--radius-full);
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .vibe-picker-btn:hover {
+      border-color: var(--accent-primary);
+      color: var(--text-main);
+    }
+    .vibe-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+    }
+
+    /* Vibe Palette Popover */
+    .vibe-drawer {
+      position: absolute;
+      top: 64px;
+      right: 16px;
+      left: 16px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-focus);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 50;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+    .vibe-drawer.open {
+      display: flex;
+    }
+    .vibe-drawer-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .vibe-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .vibe-chip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .vibe-chip:hover, .vibe-chip.active {
+      border-color: var(--accent-primary);
+      background: rgba(255,255,255,0.04);
+    }
+    .vibe-color-sample {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    /* Main Scroll Area */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-subtle) transparent;
+    }
+    .content-area::-webkit-scrollbar {
+      width: 5px;
+    }
+    .content-area::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    /* Section Tabs (Notes vs Entertainment) */
+    .tab-bar {
+      display: flex;
+      background: var(--bg-surface-elevated);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 9px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* SHAMSI AGENDA BANNER */
+    .shamsi-agenda-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .agenda-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .shamsi-date-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .shamsi-day-num {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1;
+    }
+    .shamsi-day-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .shamsi-month {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+    .shamsi-weekday {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .calendar-toggle-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .calendar-toggle-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-focus);
+    }
+
+    /* Agenda Reminders & Checkpoints */
+    .agenda-chips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .agenda-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      transition: background 0.15s;
+    }
+    .agenda-chip.holiday {
+      background: var(--tag-holiday-bg);
+      border: 1px solid var(--tag-holiday-border);
+      color: var(--tag-holiday-text);
+    }
+    .agenda-chip.birthday {
+      background: var(--tag-bday-bg);
+      border: 1px solid var(--tag-bday-border);
+      color: var(--tag-bday-text);
+    }
+    .agenda-chip.custom {
+      background: rgba(96, 165, 250, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      color: #93c5fd;
+    }
+    .agenda-chip-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .agenda-chip-icon {
+      font-size: 0.9rem;
+    }
+    .agenda-checkpoint {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1.5px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+    }
+    .agenda-checkpoint.checked {
+      background: currentColor;
+    }
+    .agenda-checkpoint.checked::after {
+      content: '✓';
+      color: var(--bg-surface);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    /* MINI CALENDAR DRAWER (EXPANDABLE) */
+    .mini-calendar-box {
+      display: none;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-top: 4px;
+    }
+    .mini-calendar-box.open {
+      display: block;
+    }
+    .cal-grid-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .cal-grid-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      text-align: center;
+      font-size: 0.72rem;
+    }
+    .cal-cell {
+      padding: 6px 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      position: relative;
+    }
+    .cal-cell:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-main);
+    }
+    .cal-cell.today {
+      background: var(--accent-primary);
+      color: #000;
+      font-weight: 800;
+    }
+    .cal-cell.has-holiday::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #f59e0b;
+    }
+
+    /* SECTION HEADERS */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-counter {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+    }
+    .add-task-btn {
+      background: transparent;
+      border: 1px dashed var(--border-focus);
+      color: var(--accent-primary);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .add-task-btn:hover {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--accent-primary);
+    }
+
+    /* TASK CARD & 3-STATE CONTROL */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .task-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .task-card:hover {
+      border-color: var(--border-focus);
+    }
+    .task-card.status-done {
+      opacity: 0.55;
+      background: rgba(16, 185, 129, 0.05);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .task-card.status-done .task-title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .task-card.status-postponed {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.05);
+    }
+    .task-card.status-canceled {
+      opacity: 0.45;
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.04);
+    }
+    .task-card.status-canceled .task-title {
+      text-decoration: line-through;
+      color: #ef4444;
+    }
+
+    .task-header-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .drag-handle {
+      color: var(--text-dim);
+      font-size: 1rem;
+      cursor: grab;
+      user-select: none;
+      padding-top: 1px;
+    }
+    .task-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .task-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.35;
+      cursor: pointer;
+    }
+    .task-notes {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    /* 3-State Controls Ribbon */
+    .task-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 2px;
+    }
+    .three-state-group {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-surface);
+      padding: 3px;
+      border-radius: var(--radius-sm);
+    }
+    .state-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .state-btn:hover {
+      color: var(--text-main);
+    }
+    .state-btn.btn-done.active {
+      background: #10b981;
+      color: #000;
+    }
+    .state-btn.btn-postpone.active {
+      background: #f59e0b;
+      color: #000;
+    }
+    .state-btn.btn-cancel.active {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .assign-today-btn {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-primary);
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .assign-today-btn:hover {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    /* BACKLOG / GENERAL TASKS DIVIDER */
+    .stream-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-focus), transparent);
+      margin: 12px 0 8px;
+    }
+
+    /* ENTERTAINMENT MODULE */
+    .media-category-selector {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .media-cat-pill {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .media-cat-pill.active {
+      background: var(--text-main);
+      color: var(--bg-canvas);
+      border-color: var(--text-main);
+    }
+
+    .media-controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .media-sort-select {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-size: 0.75rem;
+      padding: 5px 8px;
+      border-radius: var(--radius-sm);
+      outline: none;
+    }
+
+    .media-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .media-card.on-hold {
+      opacity: 0.6;
+      border-style: dashed;
+    }
+    .media-card.on-hold::before {
+      content: 'ON-HOLD';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 0.6rem;
+      font-weight: 800;
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .media-cover-box {
+      width: 74px;
+      height: 104px;
+      border-radius: var(--radius-sm);
+      background: #232d3f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .media-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .media-cover-placeholder {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+    .media-cover-action {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      font-size: 0.58rem;
+      text-align: center;
+      padding: 3px 0;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .media-cover-box:hover .media-cover-action {
+      opacity: 1;
+    }
+
+    .media-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 0;
+    }
+    .media-top-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .media-title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .media-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .media-year {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    /* Score Badge with dynamic gradient */
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 4px;
+      width: fit-content;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+
+    /* Progress Bar */
+    .progress-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-gradient);
+      border-radius: var(--radius-full);
+      transition: width 0.3s ease;
+    }
+
+    .media-foot-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+    .on-hold-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+
+    /* BOTTOM NAV BAR (Android Style) */
+    .bottom-nav {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-item.active {
+      color: var(--accent-primary);
+    }
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* NEW TASK MODAL */
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      z-index: 100;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-sheet {
+      width: 100%;
+      background: var(--bg-surface-elevated);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      border: 1px solid var(--border-focus);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .modal-input {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .modal-input:focus {
+      border-color: var(--accent-primary);
+    }
+    .modal-textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+    .modal-btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+    .btn-primary {
+      background: var(--accent-gradient);
+      border: none;
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* HELPER CLASSES */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body data-vibe="emerald-cyan">
+
+  <div class="app-viewport">
+    
+    <!-- TOP BAR -->
+    <header class="top-bar">
+      <div class="brand-title">
+        <span>⚡ PulseAssistant</span>
+      </div>
+      <button class="vibe-picker-btn" id="vibeToggleBtn" title="Customize Color Vibe">
+        <span class="vibe-dot"></span>
+        <span id="currentVibeName">Emerald / Cyan</span>
+      </button>
+    </header>
+
+    <!-- COLOR VIBE DRAWER -->
+    <div class="vibe-drawer" id="vibeDrawer">
+      <div class="vibe-drawer-title">Choose Color Vibe</div>
+      <div class="vibe-options">
+        <div class="vibe-chip active" data-vibe="emerald-cyan" data-label="Emerald / Cyan">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #10b981, #06b6d4)"></span>
+          <span>Emerald Cyan</span>
+        </div>
+        <div class="vibe-chip" data-vibe="persian-turquoise" data-label="Persian Turquoise">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #00e5ff, #ff6b8b)"></span>
+          <span>Isfahan Cyan</span>
+        </div>
+        <div class="vibe-chip" data-vibe="cyber-violet" data-label="Cyber Violet">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #8b5cf6, #ec4899)"></span>
+          <span>Cyber Violet</span>
+        </div>
+        <div class="vibe-chip" data-vibe="sunset-amber" data-label="Sunset Amber">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #f97316, #f43f5e)"></span>
+          <span>Sunset Amber</span>
+        </div>
+        <div class="vibe-chip" data-vibe="minimal-nordic" data-label="Nordic Slate">
+          <span class="vibe-color-sample" style="background: linear-gradient(135deg, #60a5fa, #a78bfa)"></span>
+          <span>Nordic Slate</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN SCROLLABLE BODY -->
+    <main class="content-area">
+
+      <!-- TOP SWITCHER: NOTES vs ENTERTAINMENT -->
+      <nav class="tab-bar">
+        <button class="tab-btn active" id="tabNotesBtn">
+          📝 Daily Pulse
+        </button>
+        <button class="tab-btn" id="tabEntertainmentBtn">
+          🎬 Entertainment
+        </button>
+      </nav>
+
+      <!-- ================= SECTION 1: QUICK NOTES & SHAMSI ================= -->
+      <div id="sectionNotes" class="view-section">
+        
+        <!-- SHAMSI AGENDA BANNER -->
+        <section class="shamsi-agenda-card">
+          <div class="agenda-header">
+            <div class="shamsi-date-badge">
+              <span class="shamsi-day-num" id="currentShamsiDay">۲۳</span>
+              <div class="shamsi-day-meta">
+                <span class="shamsi-month" id="currentShamsiMonth">آبان ۱۴۰۳</span>
+                <span class="shamsi-weekday" id="currentShamsiWeekday">جمعه (Friday)</span>
+              </div>
+            </div>
+            <button class="calendar-toggle-btn" id="toggleCalendarBtn">
+              📅 Shamsi Grid
+            </button>
+          </div>
+
+          <!-- Mini Calendar Drawer -->
+          <div class="mini-calendar-box" id="miniCalendarBox">
+            <div class="cal-grid-header">
+              <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
+            </div>
+            <div class="cal-grid-days" id="calDaysGrid">
+              <!-- Dynamically generated days -->
+            </div>
+          </div>
+
+          <!-- Agenda Chips (Holidays & Birthdays with checkpoints) -->
+          <div class="agenda-chips-list">
+            <div class="agenda-chip holiday">
+              <div class="agenda-chip-left">
+                <span class="agenda-chip-icon">🏛️</span>
+                <span>روز دختر و ولادت حضرت معصومه (تعطیل رسمی)</span>
+              </div>
+              <div class="agenda-checkpoint" title="Done checkpoint" onclick="this.classList.toggle('checked')"></div>
+            </div>
+
+            <div class="agenda-chip birthday">
+              <div class="agenda-chip-left">
+                <span class="agenda-chip-icon">🎂</span>
+                <span>تولد مریم (Mary's Birthday)</span>
+              </div>
+              <div class="agenda-checkpoint checked" title="Action checkpoint (e.g. Sent gift / Called)" onclick="this.classList.toggle('checked')"></div>
+            </div>
+
+            <div class="agenda-chip custom">
+              <div class="agenda-chip-left">
+                <span class="agenda-chip-icon">🎯</span>
+                <span>Final Exam Submission (14:00)</span>
+              </div>
+              <div class="agenda-checkpoint" title="Checkpoint" onclick="this.classList.toggle('checked')"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STREAM 1: TODAY'S FOCUS -->
+        <div style="margin-top: 18px;">
+          <div class="section-header">
+            <div class="section-title">
+              <span>📌 Today's Focus</span>
+              <span class="section-counter" id="todayCount">3</span>
+            </div>
+            <button class="add-task-btn" onclick="openAddTaskModal('daily')">+ Add for Today</button>
+          </div>
+
+          <div class="task-list" id="todayTaskList">
+            <!-- Task 1 -->
+            <div class="task-card" data-id="1">
+              <div class="task-header-row">
+                <span class="drag-handle">⠿</span>
+                <div class="task-content">
+                  <div class="task-title">Submit History Homework & Essay Draft</div>
+                  <div class="task-notes">Must cover the Safavid architecture section. Verify citations and upload PDF to LMS.</div>
+                </div>
+              </div>
+              <div class="task-actions-row">
+                <div class="three-state-group">
+                  <button class="state-btn btn-done" onclick="setTaskState(1, 'done')">Done</button>
+                  <button class="state-btn btn-postpone" onclick="setTaskState(1, 'postpone')">Tomorrow</button>
+                  <button class="state-btn btn-cancel" onclick="setTaskState(1, 'cancel')">Cancel</button>
+                </div>
+                <span style="font-size: 0.68rem; color: var(--text-dim);">Due Today</span>
+              </div>
+            </div>
+
+            <!-- Task 2 -->
+            <div class="task-card" data-id="2">
+              <div class="task-header-row">
+                <span class="drag-handle">⠿</span>
+                <div class="task-content">
+                  <div class="task-title">Groceries & Lunch Preparation</div>
+                  <div class="task-notes">• Olive oil, basmati rice, mint, fresh lemons<br>• Start cooking by 11:30 AM</div>
+                </div>
+              </div>
+              <div class="task-actions-row">
+                <div class="three-state-group">
+                  <button class="state-btn btn-done" onclick="setTaskState(2, 'done')">Done</button>
+                  <button class="state-btn btn-postpone" onclick="setTaskState(2, 'postpone')">Tomorrow</button>
+                  <button class="state-btn btn-cancel" onclick="setTaskState(2, 'cancel')">Cancel</button>
+                </div>
+                <span style="font-size: 0.68rem; color: var(--text-dim);">Due Today</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stream-divider"></div>
+
+        <!-- STREAM 2: GENERAL / BACKLOG -->
+        <div>
+          <div class="section-header">
+            <div class="section-title">
+              <span>🪐 Orbit & Backlog</span>
+              <span class="section-counter" id="backlogCount">2</span>
+            </div>
+            <button class="add-task-btn" onclick="openAddTaskModal('general')">+ Add Backlog</button>
+          </div>
+
+          <div class="task-list" id="backlogTaskList">
+            <!-- Backlog 1 -->
+            <div class="task-card" data-id="3">
+              <div class="task-header-row">
+                <span class="drag-handle">⠿</span>
+                <div class="task-content">
+                  <div class="task-title">Research Computer Vision project topic</div>
+                  <div class="task-notes">Compare YOLOv11 vs RT-DETR for real-time edge devices. Prepare 3 bullet ideas.</div>
+                </div>
+              </div>
+              <div class="task-actions-row">
+                <button class="assign-today-btn" onclick="moveTaskToToday(3)">
+                  <span>⚡ Assign to Today</span>
+                </button>
+                <div class="three-state-group">
+                  <button class="state-btn btn-done" onclick="setTaskState(3, 'done')">Done</button>
+                  <button class="state-btn btn-cancel" onclick="setTaskState(3, 'cancel')">Cancel</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Backlog 2 -->
+            <div class="task-card" data-id="4">
+              <div class="task-header-row">
+                <span class="drag-handle">⠿</span>
+                <div class="task-content">
+                  <div class="task-title">Car periodic oil change & inspection</div>
+                  <div class="task-notes">Check filter and tire pressure at local workshop this weekend.</div>
+                </div>
+              </div>
+              <div class="task-actions-row">
+                <button class="assign-today-btn" onclick="moveTaskToToday(4)">
+                  <span>⚡ Assign to Today</span>
+                </button>
+                <div class="three-state-group">
+                  <button class="state-btn btn-done" onclick="setTaskState(4, 'done')">Done</button>
+                  <button class="state-btn btn-cancel" onclick="setTaskState(4, 'cancel')">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= SECTION 2: ENTERTAINMENT ================= -->
+      <div id="sectionEntertainment" class="view-section hidden">
+        
+        <!-- Category Selector -->
+        <div class="media-category-selector" id="mediaCatSelector">
+          <div class="media-cat-pill active" data-type="all">✨ All</div>
+          <div class="media-cat-pill" data-type="book">📚 Books</div>
+          <div class="media-cat-pill" data-type="tv">📺 TV Shows</div>
+          <div class="media-cat-pill" data-type="movie">🎬 Movies</div>
+          <div class="media-cat-pill" data-type="game">🎮 Video Games</div>
+        </div>
+
+        <!-- Controls: Sort & Filter -->
+        <div class="media-controls-bar">
+          <div style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">
+            Tracking <span id="mediaTotalCount" style="color: var(--text-main);">4</span> Items
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <label style="font-size: 0.72rem; color: var(--text-dim);">Sort:</label>
+            <select class="media-sort-select" id="mediaSortSelect">
+              <option value="custom">Custom Order</option>
+              <option value="score">Highest Score</option>
+              <option value="progress">Most Progress</option>
+              <option value="year">Release Year</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Media List -->
+        <div class="task-list" id="mediaCardList">
+          
+          <!-- ITEM 1: BOOK -->
+          <div class="media-card" data-type="book" data-year="2020" data-score="8.5" data-progress="57">
+            <div class="media-cover-box" style="background: linear-gradient(145deg, #1e3a8a, #0369a1);">
+              <span class="media-cover-placeholder">📖</span>
+              <div class="media-cover-action" onclick="alert('Cover options: 1. Replace with Image URL 2. Pick device photo 3. Remove cover')">Edit Cover</div>
+            </div>
+            <div class="media-details">
+              <div class="media-top-info">
+                <div class="media-title-row">
+                  <span class="media-title">Klara and the Sun</span>
+                  <span class="media-year">2021</span>
+                </div>
+                <div>
+                  <span class="score-badge" style="background: linear-gradient(135deg, #26A69A, #43A047);">
+                    ⭐ 8.5 / 10
+                  </span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-labels">
+                  <span>Pages Read: 172 / 303</span>
+                  <span style="font-weight: 700;">57%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: 57%;"></div>
+                </div>
+              </div>
+
+              <div class="media-foot-actions">
+                <label class="on-hold-toggle-label">
+                  <input type="checkbox" onchange="toggleOnHold(this)" />
+                  <span>On-hold</span>
+                </label>
+                <button class="calendar-toggle-btn" style="padding: 2px 7px; font-size: 0.68rem;" onclick="updateProgressPrompt(this, 'Pages')">+ Update</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ITEM 2: TV SHOW -->
+          <div class="media-card" data-type="tv" data-year="2023" data-score="9.5" data-progress="80">
+            <div class="media-cover-box" style="background: linear-gradient(145deg, #4c1d95, #701a75);">
+              <span class="media-cover-placeholder">📺</span>
+              <div class="media-cover-action" onclick="alert('Cover options')">Edit Cover</div>
+            </div>
+            <div class="media-details">
+              <div class="media-top-info">
+                <div class="media-title-row">
+                  <span class="media-title">Succession</span>
+                  <span class="media-year">2023</span>
+                </div>
+                <div>
+                  <span class="score-badge" style="background: linear-gradient(135deg, #2E7D32, #7E57C2);">
+                    ⭐ 9.5 / 10
+                  </span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-labels">
+                  <span>Episodes: 32 / 39</span>
+                  <span style="font-weight: 700;">82%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: 82%;"></div>
+                </div>
+              </div>
+
+              <div class="media-foot-actions">
+                <label class="on-hold-toggle-label">
+                  <input type="checkbox" onchange="toggleOnHold(this)" />
+                  <span>On-hold</span>
+                </label>
+                <button class="calendar-toggle-btn" style="padding: 2px 7px; font-size: 0.68rem;" onclick="updateProgressPrompt(this, 'Episodes')">+ Update</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ITEM 3: MOVIE -->
+          <div class="media-card" data-type="movie" data-year="2024" data-score="7.0" data-progress="45">
+            <div class="media-cover-box" style="background: linear-gradient(145deg, #831843, #9f1239);">
+              <span class="media-cover-placeholder">🎬</span>
+              <div class="media-cover-action" onclick="alert('Cover options')">Edit Cover</div>
+            </div>
+            <div class="media-details">
+              <div class="media-top-info">
+                <div class="media-title-row">
+                  <span class="media-title">Dune: Part Two</span>
+                  <span class="media-year">2024</span>
+                </div>
+                <div>
+                  <span class="score-badge" style="background: linear-gradient(135deg, #0284c7, #10b981);">
+                    ⭐ 7.0 / 10
+                  </span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-labels">
+                  <span>Minutes: 75 / 166 min</span>
+                  <span style="font-weight: 700;">45%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: 45%;"></div>
+                </div>
+              </div>
+
+              <div class="media-foot-actions">
+                <label class="on-hold-toggle-label">
+                  <input type="checkbox" onchange="toggleOnHold(this)" />
+                  <span>On-hold</span>
+                </label>
+                <button class="calendar-toggle-btn" style="padding: 2px 7px; font-size: 0.68rem;" onclick="updateProgressPrompt(this, 'Minutes')">+ Update</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ITEM 4: VIDEO GAME -->
+          <div class="media-card on-hold" data-type="game" data-year="2022" data-score="4.5" data-progress="25">
+            <div class="media-cover-box" style="background: linear-gradient(145deg, #374151, #1f2937);">
+              <span class="media-cover-placeholder">🎮</span>
+              <div class="media-cover-action" onclick="alert('Cover options')">Edit Cover</div>
+            </div>
+            <div class="media-details">
+              <div class="media-top-info">
+                <div class="media-title-row">
+                  <span class="media-title">Elden Ring</span>
+                  <span class="media-year">2022</span>
+                </div>
+                <div>
+                  <span class="score-badge" style="background: linear-gradient(135deg, #FFA000, #C0CA33);">
+                    ⭐ 4.5 / 10
+                  </span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-labels">
+                  <span>Missions: 8 / 32</span>
+                  <span style="font-weight: 700;">25%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: 25%;"></div>
+                </div>
+              </div>
+
+              <div class="media-foot-actions">
+                <label class="on-hold-toggle-label">
+                  <input type="checkbox" checked onchange="toggleOnHold(this)" />
+                  <span>On-hold</span>
+                </label>
+                <button class="calendar-toggle-btn" style="padding: 2px 7px; font-size: 0.68rem;" onclick="updateProgressPrompt(this, 'Chapters')">+ Update</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- BOTTOM APP BAR (Android Companion style) -->
+    <footer class="bottom-nav">
+      <button class="nav-item active" onclick="switchMainTab('notes')">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Daily Pulse</span>
+      </button>
+      <button class="nav-item" onclick="switchMainTab('entertainment')">
+        <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+        <span>Media</span>
+      </button>
+      <button class="nav-item" onclick="alert('Settings: Shamsi Holidays Manager, Custom Birthdays, and Backup')">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        <span>Calendar</span>
+      </button>
+    </footer>
+
+    <!-- ADD TASK BOTTOM SHEET MODAL -->
+    <div class="modal-backdrop" id="addTaskModal">
+      <div class="modal-sheet">
+        <div class="modal-title" id="modalTargetTitle">Add New Task</div>
+        <input type="text" class="modal-input" id="newTaskTitleInput" placeholder="What needs to get done?" />
+        <textarea class="modal-input modal-textarea" id="newTaskNotesInput" placeholder="Add extra details, checklist bullets, or notes (optional)..."></textarea>
+        <div class="modal-btn-row">
+          <button class="modal-btn btn-secondary" onclick="closeAddTaskModal()">Cancel</button>
+          <button class="modal-btn btn-primary" onclick="confirmAddTask()">Save Task</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- COLOR VIBE MANAGER ---
+    const vibeToggleBtn = document.getElementById('vibeToggleBtn');
+    const vibeDrawer = document.getElementById('vibeDrawer');
+    const currentVibeName = document.getElementById('currentVibeName');
+    const vibeChips = document.querySelectorAll('.vibe-chip');
+
+    vibeToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      vibeDrawer.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!vibeDrawer.contains(e.target) && e.target !== vibeToggleBtn) {
+        vibeDrawer.classList.remove('open');
+      }
+    });
+
+    vibeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        vibeChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const vibe = chip.getAttribute('data-vibe');
+        const label = chip.getAttribute('data-label');
+        document.body.setAttribute('data-vibe', vibe);
+        currentVibeName.textContent = label;
+        vibeDrawer.classList.remove('open');
+      });
+    });
+
+    // --- TAB SWITCHER ---
+    const tabNotesBtn = document.getElementById('tabNotesBtn');
+    const tabEntertainmentBtn = document.getElementById('tabEntertainmentBtn');
+    const sectionNotes = document.getElementById('sectionNotes');
+    const sectionEntertainment = document.getElementById('sectionEntertainment');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    function switchMainTab(tab) {
+      if (tab === 'notes') {
+        tabNotesBtn.classList.add('active');
+        tabEntertainmentBtn.classList.remove('active');
+        sectionNotes.classList.remove('hidden');
+        sectionEntertainment.classList.add('hidden');
+        navItems[0].classList.add('active');
+        navItems[1].classList.remove('active');
+      } else {
+        tabEntertainmentBtn.classList.add('active');
+        tabNotesBtn.classList.remove('active');
+        sectionEntertainment.classList.remove('hidden');
+        sectionNotes.classList.add('hidden');
+        navItems[1].classList.add('active');
+        navItems[0].classList.remove('active');
+      }
+    }
+
+    tabNotesBtn.addEventListener('click', () => switchMainTab('notes'));
+    tabEntertainmentBtn.addEventListener('click', () => switchMainTab('entertainment'));
+
+    // --- 3-STATE TASK ENGINE ---
+    function setTaskState(taskId, state) {
+      const card = document.querySelector(`.task-card[data-id="${taskId}"]`);
+      if (!card) return;
+
+      const btnDone = card.querySelector('.btn-done');
+      const btnPostpone = card.querySelector('.btn-postpone');
+      const btnCancel = card.querySelector('.btn-cancel');
+
+      // Toggle off if already active
+      const isAlready = card.classList.contains(`status-${state}`);
+
+      card.classList.remove('status-done', 'status-postponed', 'status-canceled');
+      if (btnDone) btnDone.classList.remove('active');
+      if (btnPostpone) btnPostpone.classList.remove('active');
+      if (btnCancel) btnCancel.classList.remove('active');
+
+      if (!isAlready) {
+        card.classList.add(`status-${state}`);
+        if (state === 'done' && btnDone) btnDone.classList.add('active');
+        if (state === 'postpone' && btnPostpone) btnPostpone.classList.add('active');
+        if (state === 'cancel' && btnCancel) btnCancel.classList.add('active');
+      }
+    }
+
+    function moveTaskToToday(taskId) {
+      const card = document.querySelector(`.task-card[data-id="${taskId}"]`);
+      if (!card) return;
+      const todayList = document.getElementById('todayTaskList');
+      
+      // Update action buttons to have 3-state
+      const actionsRow = card.querySelector('.task-actions-row');
+      actionsRow.innerHTML = `
+        <div class="three-state-group">
+          <button class="state-btn btn-done" onclick="setTaskState(${taskId}, 'done')">Done</button>
+          <button class="state-btn btn-postpone" onclick="setTaskState(${taskId}, 'postpone')">Tomorrow</button>
+          <button class="state-btn btn-cancel" onclick="setTaskState(${taskId}, 'cancel')">Cancel</button>
+        </div>
+        <span style="font-size: 0.68rem; color: var(--accent-primary);">Moved to Today</span>
+      `;
+
+      todayList.appendChild(card);
+      updateCounts();
+    }
+
+    function updateCounts() {
+      document.getElementById('todayCount').textContent = document.getElementById('todayTaskList').children.length;
+      document.getElementById('backlogCount').textContent = document.getElementById('backlogTaskList').children.length;
+    }
+
+    // --- MODAL & TASK CREATION ---
+    let currentModalTarget = 'daily';
+    const addTaskModal = document.getElementById('addTaskModal');
+    const modalTargetTitle = document.getElementById('modalTargetTitle');
+    const newTaskTitleInput = document.getElementById('newTaskTitleInput');
+    const newTaskNotesInput = document.getElementById('newTaskNotesInput');
+
+    function openAddTaskModal(target) {
+      currentModalTarget = target;
+      modalTargetTitle.textContent = target === 'daily' ? 'Add Task for Today' : 'Add to General Backlog';
+      newTaskTitleInput.value = '';
+      newTaskNotesInput.value = '';
+      addTaskModal.classList.add('open');
+      newTaskTitleInput.focus();
+    }
+
+    function closeAddTaskModal() {
+      addTaskModal.classList.remove('open');
+    }
+
+    let idCounter = 10;
+    function confirmAddTask() {
+      const title = newTaskTitleInput.value.trim();
+      const notes = newTaskNotesInput.value.trim();
+      if (!title) return;
+
+      const newId = ++idCounter;
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      card.setAttribute('data-id', newId);
+
+      const notesHtml = notes ? `<div class="task-notes">${notes.replace(/\n/g, '<br>')}</div>` : '';
+
+      if (currentModalTarget === 'daily') {
+        card.innerHTML = `
+          <div class="task-header-row">
+            <span class="drag-handle">⠿</span>
+            <div class="task-content">
+              <div class="task-title">${title}</div>
+              ${notesHtml}
+            </div>
+          </div>
+          <div class="task-actions-row">
+            <div class="three-state-group">
+              <button class="state-btn btn-done" onclick="setTaskState(${newId}, 'done')">Done</button>
+              <button class="state-btn btn-postpone" onclick="setTaskState(${newId}, 'postpone')">Tomorrow</button>
+              <button class="state-btn btn-cancel" onclick="setTaskState(${newId}, 'cancel')">Cancel</button>
+            </div>
+            <span style="font-size: 0.68rem; color: var(--text-dim);">Due Today</span>
+          </div>
+        `;
+        document.getElementById('todayTaskList').prepend(card);
+      } else {
+        card.innerHTML = `
+          <div class="task-header-row">
+            <span class="drag-handle">⠿</span>
+            <div class="task-content">
+              <div class="task-title">${title}</div>
+              ${notesHtml}
+            </div>
+          </div>
+          <div class="task-actions-row">
+            <button class="assign-today-btn" onclick="moveTaskToToday(${newId})">
+              <span>⚡ Assign to Today</span>
+            </button>
+            <div class="three-state-group">
+              <button class="state-btn btn-done" onclick="setTaskState(${newId}, 'done')">Done</button>
+              <button class="state-btn btn-cancel" onclick="setTaskState(${newId}, 'cancel')">Cancel</button>
+            </div>
+          </div>
+        `;
+        document.getElementById('backlogTaskList').prepend(card);
+      }
+
+      closeAddTaskModal();
+      updateCounts();
+    }
+
+    // --- MINI SHAMSI CALENDAR POPULATOR ---
+    const toggleCalendarBtn = document.getElementById('toggleCalendarBtn');
+    const miniCalendarBox = document.getElementById('miniCalendarBox');
+    const calDaysGrid = document.getElementById('calDaysGrid');
+
+    toggleCalendarBtn.addEventListener('click', () => {
+      miniCalendarBox.classList.toggle('open');
+    });
+
+    // Populate Shamsi month days (Aban: 30 days)
+    for (let day = 1; day <= 30; day++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      cell.textContent = day;
+      if (day === 23) cell.classList.add('today');
+      if (day === 23 || day === 15 || day === 28) cell.classList.add('has-holiday');
+      
+      cell.addEventListener('click', () => {
+        document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('today'));
+        cell.classList.add('today');
+        document.getElementById('currentShamsiDay').textContent = day;
+      });
+      calDaysGrid.appendChild(cell);
+    }
+
+    // --- ENTERTAINMENT CATEGORY FILTERING ---
+    const catPills = document.querySelectorAll('.media-cat-pill');
+    const mediaCards = document.querySelectorAll('.media-card');
+
+    catPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        catPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const selectedType = pill.getAttribute('data-type');
+
+        let visibleCount = 0;
+        mediaCards.forEach(card => {
+          if (selectedType === 'all' || card.getAttribute('data-type') === selectedType) {
+            card.style.display = 'flex';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        document.getElementById('mediaTotalCount').textContent = visibleCount;
+      });
+    });
+
+    function toggleOnHold(checkbox) {
+      const card = checkbox.closest('.media-card');
+      if (checkbox.checked) {
+        card.classList.add('on-hold');
+      } else {
+        card.classList.remove('on-hold');
+      }
+    }
+
+    function updateProgressPrompt(btn, unit) {
+      const val = prompt(`Enter updated ${unit} progress:`);
+      if (val) {
+        alert(`Progress updated to ${val} ${unit}!`);
+      }
+    }
+  </script>
+</body>
+</html>
