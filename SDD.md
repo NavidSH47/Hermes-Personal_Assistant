@@ -11,7 +11,12 @@ PulseAssistant is a zero-latency, local-first daily companion combining:
 1. **Contextual Day-Planner & Shamsi Agenda:** Solar Hijri calendar integration, official holidays, custom birthdays/events with action checkpoints.
 2. **Split-Stream Task Engine ("Daily Pulse"):** Today's Focus vs. Backlog/Orbit, multi-line notes, 3-state execution (`Done`, `Postponed -> Tomorrow`, `Canceled`), and drag-reordering.
 3. **Unified Entertainment Tracker:** Books, TV Shows, Movies, and Video Games with metric progress tracking, half-point gradient ratings (1.0 - 10.0), cover art editing, and on-hold states.
-4. **Adaptive Aesthetics:** Built-in dynamic color vibe themes (Emerald Cyan, Persian Turquoise / Isfahan Cyan, Cyber Violet, Sunset Amber, Nordic Slate) + custom accent capability.
+4. **Adaptive Aesthetics & Themes:** Built-in dynamic color vibe themes + custom accent capability:
+   - **Purples:** Deep Amethyst (`#9333ea`), Electric Lavender (`#c084fc`), Cyber Violet (`#8b5cf6`).
+   - **Oranges:** Solar Tangerine (`#ea580c`), Sunset Amber (`#f97316`).
+   - **Snowy / Frost:** Arctic Frost (`#38bdf8` / icy frost white `#f0f9ff`).
+   - **Others:** Isfahan Cyan / Persian Turquoise (`#00e5ff`), Emerald Cyan (`#10b981`), Nordic Slate (`#60a5fa`).
+5. **Streamlined Navigation:** Unified top app bar combining brand identity, vibe picker, and segmented switcher (`📝 Daily Pulse` / `🎬 Entertainment`). No duplicate bottom navigation bars.
 
 ---
 
