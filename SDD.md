@@ -17,13 +17,14 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
    - **Snowy / Frost:** Arctic Frost (`#38bdf8` / icy frost white `#f0f9ff`).
    - **Others:** Isfahan Cyan / Persian Turquoise (`#00e5ff`), Emerald Cyan (`#10b981`), Nordic Slate (`#60a5fa`).
 5. **Dynamic Typography & Font Manager:** Built-in font family selector allowing instant runtime font switching:
-   - **Default Sans:** Modern clean system font.
-   - **Comic Sans:** Playful, casual, and friendly typography (`Comic Sans MS` / `Comic Neue`).
+   - **Default Sans:** Modern clean system font (`Vazirmatn` + system UI).
+   - **Comic Sans:** Playful Latin typography (`Comic Sans MS` / `Comic Neue`) with Persian text rendered cleanly in the default sans font (`Vazirmatn`).
    - **Rounded Bold:** Smooth, friendly soft-cornered font (`Arial Rounded MT Bold` / `Quicksand`).
    - **Tech Mono:** Code/terminal fixed-width styling (`Cascadia Code` / `Fira Code` / `Consolas`).
    - **Editorial Serif:** Classic literary typography (`Georgia` / `Cambria`).
    - **Vazirmatn:** Native Persian/Solar Hijri typography optimized for bilingual rendering.
-6. **Streamlined Navigation:** Unified top app bar combining brand identity, vibe picker, font manager, and segmented switcher (`📝 Daily Pulse` / `🎬 Entertainment`). No duplicate bottom navigation bars.
+6. **Consolidated Settings Side Menu:** Slide-over drawer accessed via a gear button (`⚙️`) in the top bar containing both the Color Vibe themes and Typography settings.
+7. **Streamlined Navigation & Dual-View Entertainment:** Unified top app bar combining brand identity, settings button, and segmented stream switcher. Entertainment ledger supports both **List View** (horizontal details) and **Grid View** (2-column poster-first cards). No duplicate bottom navigation bars.
 
 ---
 
@@ -90,6 +91,7 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
   - **Orbit / Backlog:** Floating general tasks with a 1-tap "Assign to Today" action.
 
 ### 4.2 Entertainment Ledger
+- **Presentation Modes:** Toggle between **List View** (horizontal details, action controls) and **Grid View** (2-column poster-first layout with cover prominence).
 - **Progress Units:**
   - Books: `Pages`
   - TV Shows: `Episodes`
