@@ -1,0 +1,247 @@
+import 'package:flutter/material.dart';
+import '../models/task.dart';
+import '../theme/app_theme.dart';
+
+class TaskCard extends StatelessWidget {
+  final Task task;
+  final VibePalette palette;
+  final Function(TaskStatus) onStatusChange;
+  final VoidCallback? onAssignToToday;
+  final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+
+  const TaskCard({
+    super.key,
+    required this.task,
+    required this.palette,
+    required this.onStatusChange,
+    this.onAssignToToday,
+    this.onDelete,
+    this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Color cardBg = palette.bgElevated;
+    Color cardBorder = palette.borderSubtle;
+    double cardOpacity = 1.0;
+    TextStyle titleStyle = TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: palette.textMain,
+    );
+
+    if (task.status == TaskStatus.done) {
+      cardBg = const Color(0x1010B981);
+      cardBorder = const Color(0x4D10B981);
+      cardOpacity = 0.65;
+      titleStyle = titleStyle.copyWith(
+        decoration: TextDecoration.lineThrough,
+        color: palette.textMuted,
+      );
+    } else if (task.status == TaskStatus.postponed) {
+      cardBg = const Color(0x14F59E0B);
+      cardBorder = const Color(0x66F59E0B);
+    } else if (task.status == TaskStatus.canceled) {
+      cardBg = const Color(0x10EF4444);
+      cardBorder = const Color(0x4DEF4444);
+      cardOpacity = 0.55;
+      titleStyle = titleStyle.copyWith(
+        decoration: TextDecoration.lineThrough,
+        color: const Color(0xFFEF4444),
+      );
+    }
+
+    return Opacity(
+      opacity: cardOpacity,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cardBg,
+          border: Border.all(color: cardBorder),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Row: Drag Handle + Title + Options Menu
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2, right: 8),
+                  child: Icon(
+                    Icons.drag_indicator,
+                    size: 18,
+                    color: palette.textDim,
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    onTap: onEdit,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(task.title, style: titleStyle),
+                        if (task.notes.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            task.notes,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: palette.textMuted,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                if (onDelete != null)
+                  IconButton(
+                    icon: Icon(Icons.close, size: 16, color: palette.textDim),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: onDelete,
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+            Divider(color: const Color(0x0FFFFFFF), height: 1),
+            const SizedBox(height: 8),
+
+            // Bottom Actions Row: 3-State Controls + Context
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // 3-State Action Buttons
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: palette.bgSurface,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Done Button
+                      _buildStateButton(
+                        label: 'Done',
+                        isActive: task.status == TaskStatus.done,
+                        activeBg: const Color(0xFF10B981),
+                        activeFg: Colors.black,
+                        targetStatus: TaskStatus.done,
+                      ),
+                      const SizedBox(width: 3),
+
+                      // Postpone to Tomorrow Button (Daily items)
+                      if (task.category == TaskCategory.daily) ...[
+                        _buildStateButton(
+                          label: 'Tomorrow',
+                          isActive: task.status == TaskStatus.postponed,
+                          activeBg: const Color(0xFFF59E0B),
+                          activeFg: Colors.black,
+                          targetStatus: TaskStatus.postponed,
+                        ),
+                        const SizedBox(width: 3),
+                      ],
+
+                      // Cancel Button
+                      _buildStateButton(
+                        label: 'Cancel',
+                        isActive: task.status == TaskStatus.canceled,
+                        activeBg: const Color(0xFFEF4444),
+                        activeFg: Colors.white,
+                        targetStatus: TaskStatus.canceled,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Right side: Assign to Today or Badge
+                if (task.category == TaskCategory.general && onAssignToToday != null)
+                  InkWell(
+                    onTap: onAssignToToday,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: palette.borderSubtle),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.bolt,
+                            size: 13,
+                            color: palette.accentPrimary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Assign Today',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: palette.accentPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Text(
+                    task.status == TaskStatus.postponed
+                        ? 'Postponed (${task.postponedCount + 1}x)'
+                        : 'Due Today',
+                    style: TextStyle(fontSize: 10, color: palette.textDim),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStateButton({
+    required String label,
+    required bool isActive,
+    required Color activeBg,
+    required Color activeFg,
+    required TaskStatus targetStatus,
+  }) {
+    return InkWell(
+      onTap: () {
+        if (isActive) {
+          onStatusChange(TaskStatus.pending); // Toggle off back to pending
+        } else {
+          onStatusChange(targetStatus);
+        }
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isActive ? activeBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: isActive ? activeFg : palette.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
