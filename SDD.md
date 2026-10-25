@@ -50,6 +50,8 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
 - `status`: Enum (`pending`, `done`, `postponed`, `canceled`)
 - `order_index`: Integer (for reordering within view)
 - `postponed_count`: Integer (default 0)
+- `linked_media_id`: String? (ID of linked MediaItem for daily habit tracking)
+- `media_units_to_advance`: Double? (Units to increment upon checking Done)
 - `created_at`: Timestamp
 - `updated_at`: Timestamp
 
@@ -71,6 +73,8 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
 - `release_year`: Integer
 - `cover_url`: String?
 - `local_cover_path`: String?
+- `personal_notes`: String? (User review, quotes, and thoughts)
+- `labels`: List<String> (Universal custom tags: e.g. "Horror", "Sci-Fi", "Ongoing", "Masterpiece")
 - `progress_current`: Double (pages, episodes, minutes, chapters)
 - `progress_total`: Double
 - `score`: Double? (Range: 1.0 - 10.0, step: 0.5)
@@ -85,13 +89,19 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
 ### 4.1 Daily Pulse & Shamsi Agenda
 - Pinned Agenda Header displaying Solar Hijri date (e.g. `جمعه ۲۳ آبان ۱۴۰۳`).
 - Event and holiday chips with action checkpoints `[ ]` / `[✓]` (e.g. Mary's Birthday -> call or send gift).
-- **Native RTL Calendar Grid:** The Shamsi calendar drawer and month views flow strictly **Right-to-Left (RTL)** from Saturday (`شنبه`, far right) to Friday (`جمعه`, far left with red holiday highlight), matching standard Persian calendar conventions.
-- Two distinct task sections:
+- **Accurate RTL Calendar Grid:** The Shamsi calendar drawer and month views flow strictly **Right-to-Left (RTL)** from Saturday (`شنبه`, far right) to Friday (`جمعه`, far left with red holiday highlight). Month 1st day aligns dynamically to its true weekday. Includes month switcher (`‹ Next` / `Prev ›`) and clear "Today" marker.
+- **Quick Date Navigation Bar:** Pinned navigation buttons: `[ « Week ]`, `[ ‹ Day ]`, `[ Today ]`, `[ Day › ]`, `[ Week » ]` for quick hopping between dates.
+- **Preloaded Holiday Library:** Comprehensive pre-seeded database of Iranian public holidays (Nowruz, Islamic holidays, national days) + notable cultural/global days.
+- **Clean English UI:** Modal headers, buttons, and placeholders are kept in clean English, with Persian preserved for native calendar strings and titles.
+- **Two Distinct Task Sections:**
   - **Today's Focus:** Tasks scheduled for today, featuring three-state actions (`Done`, `Tomorrow`, `Cancel`).
-  - **Orbit / Backlog:** Floating general tasks with a 1-tap "Assign to Today" action.
+  - **Orbit / Backlog:** Floating general tasks with a 1-tap "Assign to Today" action (no auto-transfer on scroll).
 
-### 4.2 Entertainment Ledger
+### 4.2 Entertainment Ledger & Media Daily Goals
 - **Presentation Modes:** Toggle between **List View** (horizontal details, action controls) and **Grid View** (2-column poster-first layout with cover prominence).
+- **Media as To-Do Task ("Schedule for Today"):** Any media item can be scheduled as a daily goal (e.g. "Watch 3 episodes of Succession" or "Read 25 pages of Klara and the Sun"). It creates a linked task in Today's Focus; checking it **Done** automatically syncs and advances the media item's progress counter.
+- **Personal Notes / Descriptions:** In-place editable notes on every media item for reviews, favorite quotes, and viewing logs.
+- **Universal Custom Labels:** Multi-select custom tags applied across all 4 categories (e.g. `Horror`, `Sci-Fi`, `Ongoing`, `Masterpiece`, `RPG`) with an instant filter bar.
 - **Progress Units:**
   - Books: `Pages`
   - TV Shows: `Episodes`
