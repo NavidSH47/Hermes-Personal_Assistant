@@ -11,6 +11,9 @@ class Task {
   final TaskStatus status;
   final int orderIndex;
   final int postponedCount;
+  final String? linkedMediaId;
+  final double? mediaUnitsToAdvance;
+  final String? mediaTitle;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +26,9 @@ class Task {
     this.status = TaskStatus.pending,
     this.orderIndex = 0,
     this.postponedCount = 0,
+    this.linkedMediaId,
+    this.mediaUnitsToAdvance,
+    this.mediaTitle,
     DateTime? createdAt,
     DateTime? updatedAt,
   })  : createdAt = createdAt ?? DateTime.now(),
@@ -37,6 +43,9 @@ class Task {
     TaskStatus? status,
     int? orderIndex,
     int? postponedCount,
+    String? linkedMediaId,
+    double? mediaUnitsToAdvance,
+    String? mediaTitle,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -49,6 +58,9 @@ class Task {
       status: status ?? this.status,
       orderIndex: orderIndex ?? this.orderIndex,
       postponedCount: postponedCount ?? this.postponedCount,
+      linkedMediaId: linkedMediaId ?? this.linkedMediaId,
+      mediaUnitsToAdvance: mediaUnitsToAdvance ?? this.mediaUnitsToAdvance,
+      mediaTitle: mediaTitle ?? this.mediaTitle,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );
@@ -64,6 +76,9 @@ class Task {
       'status': status.name,
       'orderIndex': orderIndex,
       'postponedCount': postponedCount,
+      'linkedMediaId': linkedMediaId,
+      'mediaUnitsToAdvance': mediaUnitsToAdvance,
+      'mediaTitle': mediaTitle,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -85,6 +100,9 @@ class Task {
       ),
       orderIndex: (json['orderIndex'] as int?) ?? 0,
       postponedCount: (json['postponedCount'] as int?) ?? 0,
+      linkedMediaId: json['linkedMediaId'] as String?,
+      mediaUnitsToAdvance: (json['mediaUnitsToAdvance'] as num?)?.toDouble(),
+      mediaTitle: json['mediaTitle'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
           : DateTime.now(),

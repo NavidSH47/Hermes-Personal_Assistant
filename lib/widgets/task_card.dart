@@ -65,6 +65,43 @@ class TaskCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Linked Media Goal Badge if attached
+            if (task.linkedMediaId != null) ...[
+              Container(
+                margin: const EdgeInsets.only(left: 26, bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: palette.accentPrimary.withValues(alpha: 0.15),
+                  border: Border.all(color: palette.borderSubtle),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '🎯 Media Goal: ${task.mediaTitle ?? 'Linked Media'}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: palette.accentPrimary,
+                      ),
+                    ),
+                    if (task.mediaUnitsToAdvance != null) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '• +${task.mediaUnitsToAdvance!.toInt()}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: palette.textMain,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+
             // Top Row: Drag Handle + Title + Options Menu
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,10 +235,16 @@ class TaskCard extends StatelessWidget {
                   )
                 else
                   Text(
-                    task.status == TaskStatus.postponed
-                        ? 'Postponed (${task.postponedCount + 1}x)'
-                        : 'Due Today',
-                    style: TextStyle(fontSize: 10, color: palette.textDim),
+                    task.linkedMediaId != null
+                        ? '+${task.mediaUnitsToAdvance?.toInt() ?? 0} on check'
+                        : (task.status == TaskStatus.postponed
+                            ? 'Postponed (${task.postponedCount + 1}x)'
+                            : 'Due Today'),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: task.linkedMediaId != null ? FontWeight.bold : FontWeight.normal,
+                      color: task.linkedMediaId != null ? palette.accentPrimary : palette.textDim,
+                    ),
                   ),
               ],
             ),

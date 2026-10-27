@@ -9,6 +9,8 @@ class MediaItem {
   final int releaseYear;
   final String? coverUrl;
   final String? localCoverPath;
+  final String? personalNotes;
+  final List<String> labels;
   final double progressCurrent;
   final double progressTotal;
   final double? score; // 1.0 - 10.0 in 0.5 steps
@@ -23,6 +25,8 @@ class MediaItem {
     required this.releaseYear,
     this.coverUrl,
     this.localCoverPath,
+    this.personalNotes,
+    this.labels = const [],
     required this.progressCurrent,
     required this.progressTotal,
     this.score,
@@ -103,6 +107,8 @@ class MediaItem {
     int? releaseYear,
     String? coverUrl,
     String? localCoverPath,
+    String? personalNotes,
+    List<String>? labels,
     double? progressCurrent,
     double? progressTotal,
     double? score,
@@ -117,6 +123,8 @@ class MediaItem {
       releaseYear: releaseYear ?? this.releaseYear,
       coverUrl: coverUrl ?? this.coverUrl,
       localCoverPath: localCoverPath ?? this.localCoverPath,
+      personalNotes: personalNotes ?? this.personalNotes,
+      labels: labels ?? this.labels,
       progressCurrent: progressCurrent ?? this.progressCurrent,
       progressTotal: progressTotal ?? this.progressTotal,
       score: score ?? this.score,
@@ -134,6 +142,8 @@ class MediaItem {
       'releaseYear': releaseYear,
       'coverUrl': coverUrl,
       'localCoverPath': localCoverPath,
+      'personalNotes': personalNotes,
+      'labels': labels,
       'progressCurrent': progressCurrent,
       'progressTotal': progressTotal,
       'score': score,
@@ -154,6 +164,11 @@ class MediaItem {
       releaseYear: (json['releaseYear'] as int?) ?? 2024,
       coverUrl: json['coverUrl'] as String?,
       localCoverPath: json['localCoverPath'] as String?,
+      personalNotes: json['personalNotes'] as String?,
+      labels: (json['labels'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       progressCurrent: (json['progressCurrent'] as num?)?.toDouble() ?? 0.0,
       progressTotal: (json['progressTotal'] as num?)?.toDouble() ?? 100.0,
       score: (json['score'] as num?)?.toDouble(),

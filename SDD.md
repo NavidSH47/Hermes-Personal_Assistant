@@ -113,4 +113,29 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
   - `7.0 - 8.5`: Teal to Emerald (`#26A69A` -> `#43A047`)
   - `9.0 - 10.0`: Deep Emerald to Royal Violet (`#2E7D32` -> `#7E57C2`)
 - **Cover Management:** Local image file picker, direct image URL, or removal fallback with title initials.
-- **On-Hold Mode:** Dimmed visual state, filterable from active queue.
+### 4.3 Improvement Phase & In-Flight Enhancements
+The project is currently in the **active refinement and UX polishing phase**, targeting the following items:
+1. **Interactive Date Navigation & Day Tasks History:**
+   - Quick navigation bar (`« Week`, `‹ Day`, `Today`, `Day ›`, `Week »`) bound to persistent daily task registries.
+   - Preserves completed and unfinished states as the user shifts across historical or future dates.
+2. **Advanced Task Rescheduling & Postponing:**
+   - Single-tap `Postpone`: Automatically transfers task to the following day and hides it from today's list.
+   - Long-press `Postpone`: Triggers side/modal calendar grid to pick any arbitrary target future date.
+3. **Task Stream Flow Rules:**
+   - Prevention of accidental auto-scrolling/focus transitions into Today's list.
+   - Bidirectional movement: Ability to demote Today tasks back to General Backlog/Orbit.
+4. **Desktop & Mobile Reordering Compatibility:**
+   - Pointer and drag-and-drop listener fixes for Flutter web (Chrome) and touch gesture listeners on mobile.
+5. **Media Ledger Cleanups:**
+   - Removal of overlapping on-hold text labels over release year badges (relies cleanly on accent border and checkbox state).
+   - Local cover art disk/cache persistence (prevents redundant network re-fetching across app restarts).
+   - Dynamic unit label binding in the Add/Edit dialog based on selected media type (Pages, Episodes, Minutes, Chapters).
+6. **Dual Calendar Integration & Event Checkpoints:**
+   - Bilingual date display: Solar Hijri (Shamsi) paired with its Gregorian date equivalent.
+   - Visual strikethrough styling for completed checkpoints in calendar event reminders.
+
+---
+
+## 5. Verification & Test Suite
+- **Unit & Logic Tests (`test/unit_test.dart`):** Validates task state transitions (Done, Postponed, Canceled), media model serialization/deserialization, label filtering, and media-to-task progress sync.
+- **Build Targets:** Android APK/Bundle, Web (CanvasKit/HTML renderer), and Windows Desktop.

@@ -9,6 +9,8 @@ class MediaCard extends StatelessWidget {
   final Function(bool) onToggleOnHold;
   final VoidCallback onUpdateProgress;
   final VoidCallback onEditCover;
+  final VoidCallback onScheduleToday;
+  final VoidCallback onEditNotes;
   final VoidCallback? onDelete;
 
   const MediaCard({
@@ -19,6 +21,8 @@ class MediaCard extends StatelessWidget {
     required this.onToggleOnHold,
     required this.onUpdateProgress,
     required this.onEditCover,
+    required this.onScheduleToday,
+    required this.onEditNotes,
     this.onDelete,
   });
 
@@ -86,7 +90,75 @@ class MediaCard extends StatelessWidget {
                       ],
                     ),
 
+                    if (item.labels.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 2,
+                        children: item.labels.map((l) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.06),
+                              border: Border.all(color: palette.borderSubtle),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              l,
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: palette.textMuted,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+
                     const SizedBox(height: 4),
+
+                    // Personal Note
+                    InkWell(
+                      onTap: onEditNotes,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          border: Border(
+                            left: BorderSide(
+                              color: palette.accentPrimary,
+                              width: 2,
+                            ),
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: Text(
+                          item.personalNotes != null &&
+                                  item.personalNotes!.isNotEmpty
+                              ? '📝 "${item.personalNotes}"'
+                              : '📝 + Add personal description/notes...',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                            color: item.personalNotes != null &&
+                                    item.personalNotes!.isNotEmpty
+                                ? palette.textMuted
+                                : palette.textDim,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
 
                     // Score Badge
                     _buildScoreBadge(),
@@ -98,67 +170,106 @@ class MediaCard extends StatelessWidget {
 
                     const SizedBox(height: 8),
 
-                    // Foot Actions: On-hold + Update Progress
+                    // Foot Actions: Schedule Today + On-hold + Update Progress
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         InkWell(
-                          onTap: () => onToggleOnHold(!item.isOnHold),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: Checkbox(
-                                  value: item.isOnHold,
-                                  onChanged: (val) =>
-                                      onToggleOnHold(val ?? false),
-                                  activeColor: const Color(0xFFF59E0B),
-                                  side: BorderSide(
-                                    color: palette.textDim,
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'On-hold',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: item.isOnHold
-                                      ? const Color(0xFFFBBF24)
-                                      : palette.textDim,
-                                  fontWeight: item.isOnHold
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        InkWell(
-                          onTap: onUpdateProgress,
+                          onTap: onScheduleToday,
                           borderRadius: BorderRadius.circular(6),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 7,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: palette.bgSurface,
                               border: Border.all(color: palette.borderSubtle),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(
-                              '+ Update',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: palette.accentPrimary,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 11,
+                                  color: palette.accentPrimary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Schedule Today',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: palette.accentPrimary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                        ),
+                        Row(
+                          children: [
+                            InkWell(
+                              onTap: () => onToggleOnHold(!item.isOnHold),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: Checkbox(
+                                      value: item.isOnHold,
+                                      onChanged: (val) =>
+                                          onToggleOnHold(val ?? false),
+                                      activeColor: const Color(0xFFF59E0B),
+                                      side: BorderSide(
+                                        color: palette.textDim,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Hold',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: item.isOnHold
+                                          ? const Color(0xFFFBBF24)
+                                          : palette.textDim,
+                                      fontWeight: item.isOnHold
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            InkWell(
+                              onTap: onUpdateProgress,
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: palette.bgSurface,
+                                  border:
+                                      Border.all(color: palette.borderSubtle),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '+ Update',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: palette.accentPrimary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

@@ -122,13 +122,25 @@ class StorageService {
   List<Task> _initialSampleTasks() {
     return [
       Task(
+        id: 't_media_1',
+        title: 'Watch 3 episodes of Succession (Season 3 finale)',
+        notes:
+            'Will advance series progress from 32 to 35 episodes automatically upon completion!',
+        category: TaskCategory.daily,
+        status: TaskStatus.pending,
+        orderIndex: 0,
+        linkedMediaId: 'm_2',
+        mediaUnitsToAdvance: 3,
+        mediaTitle: 'Succession',
+      ),
+      Task(
         id: 't_1',
         title: 'Submit History Homework & Essay Draft',
         notes:
             'Must cover the Safavid architecture section. Verify citations and upload PDF to LMS.',
         category: TaskCategory.daily,
         status: TaskStatus.pending,
-        orderIndex: 0,
+        orderIndex: 1,
       ),
       Task(
         id: 't_2',
@@ -137,7 +149,7 @@ class StorageService {
             '• Olive oil, basmati rice, mint, fresh lemons\n• Start cooking by 11:30 AM',
         category: TaskCategory.daily,
         status: TaskStatus.pending,
-        orderIndex: 1,
+        orderIndex: 2,
       ),
       Task(
         id: 't_3',
@@ -166,6 +178,9 @@ class StorageService {
         type: MediaType.book,
         title: 'Klara and the Sun',
         releaseYear: 2021,
+        personalNotes:
+            'Poignant exploration of love, loneliness and AI consciousness from Klara\'s perspective.',
+        labels: ['Sci-Fi', 'Masterpiece'],
         progressCurrent: 172,
         progressTotal: 303,
         score: 8.5,
@@ -177,6 +192,9 @@ class StorageService {
         type: MediaType.tvShow,
         title: 'Succession',
         releaseYear: 2023,
+        personalNotes:
+            'Incredible writing and tension. Watching Season 3 finale this week.',
+        labels: ['Drama', 'Ongoing', 'Masterpiece'],
         progressCurrent: 32,
         progressTotal: 39,
         score: 9.5,
@@ -188,6 +206,8 @@ class StorageService {
         type: MediaType.movie,
         title: 'Dune: Part Two',
         releaseYear: 2024,
+        personalNotes: 'Sound design and cinematography are top-tier in IMAX.',
+        labels: ['Sci-Fi'],
         progressCurrent: 75,
         progressTotal: 166,
         score: 7.0,
@@ -199,6 +219,8 @@ class StorageService {
         type: MediaType.videoGame,
         title: 'Elden Ring',
         releaseYear: 2022,
+        personalNotes: 'Stuck at Radahn fight. Taking a break for a while.',
+        labels: ['RPG', 'Ongoing'],
         progressCurrent: 8,
         progressTotal: 32,
         score: 4.5,
