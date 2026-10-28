@@ -1,5 +1,4 @@
 import 'package:intl/intl.dart';
-import '../models/task.dart';
 
 /// Placeholder service for persisting daily task registries and navigating dates.
 /// Currently stores tasks in memory; integration with StorageService will be added later.
