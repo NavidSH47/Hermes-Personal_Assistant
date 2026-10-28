@@ -32,10 +32,7 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
 
 | Framework | Pros | Cons | Verdict |
 | :--- | :--- | :--- | :--- |
-| **React Native (Expo)** | Instant live testing on physical Android via Expo Go (scan QR code, zero Android Studio setup required), modern TS/React, instant web preview. | Relies on JS bridge (now minimal with New Architecture). | **Top Pick for rapid development & ease of running** |
-| **Kotlin + Jetpack Compose** | Pure 100% native Android, modern declarative UI. | Heavy Gradle build times, complex dev environment setup. | Best if 100% native Kotlin is strictly required |
 | **Flutter (Dart)** | High-performance 120fps Skia/Impeller canvas, mature Shamsi packages (`shamsi_date`). | Learning Dart required. | Solid cross-platform pick |
-| **NestJS** | Enterprise server-side framework (Node.js/TS). | Not for mobile apps; server backend only. NSH Assistant is local-first. | N/A (Client does not require a remote server) |
 
 ---
 
@@ -114,6 +111,15 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
   - `9.0 - 10.0`: Deep Emerald to Royal Violet (`#2E7D32` -> `#7E57C2`)
 - **Cover Management:** Local image file picker, direct image URL, or removal fallback with title initials.
 ### 4.3 Improvement Phase & In-Flight Enhancements
+
+#### Prioritized In-Flight Tasks
+
+1. ✅ Interactive Date Navigation & Day Tasks History
+2. ✅ Advanced Task Rescheduling & Postponing
+3. ✅ Task Stream Flow Rules
+4. ✅ Desktop & Mobile Reordering Compatibility
+5. ✅ Media Ledger Cleanups
+6. Dual Calendar Integration & Event Checkpoints
 The project is currently in the **active refinement and UX polishing phase**, targeting the following items:
 1. **Interactive Date Navigation & Day Tasks History:**
    - Quick navigation bar (`« Week`, `‹ Day`, `Today`, `Day ›`, `Week »`) bound to persistent daily task registries.

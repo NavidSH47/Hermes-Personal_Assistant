@@ -83,6 +83,62 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Existing fields...
+  // Added placeholder methods for media scheduling and notes editing
+  void _scheduleMediaToday(MediaItem item) {
+    // Create a simple daily task linked to this media item
+    final newTask = Task(
+      id: 't_media_${item.id}',
+      title: 'Consume ${item.title}',
+      notes: '',
+      category: TaskCategory.daily,
+      status: TaskStatus.pending,
+      orderIndex: _tasks.length,
+      linkedMediaId: item.id,
+      mediaUnitsToAdvance: 1,
+      mediaTitle: item.title,
+    );
+    setState(() {
+      _tasks.add(newTask);
+    });
+    widget.storage.saveTasks(_tasks);
+  }
+
+  void _editMediaNotes(MediaItem item) async {
+    final controller = TextEditingController(text: item.personalNotes ?? '');
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Media Notes'),
+        content: TextField(
+          controller: controller,
+          maxLines: 5,
+          decoration: const InputDecoration(hintText: 'Enter notes'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        final idx = _mediaItems.indexWhere((m) => m.id == item.id);
+        if (idx != -1) {
+          _mediaItems[idx] = item.copyWith(personalNotes: result);
+        }
+      });
+      widget.storage.saveMediaItems(_mediaItems);
+    }
+  }
+
+  // Existing methods continue...
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String _currentTab = 'notes';
@@ -1227,27 +1283,31 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context, index) {
               final item = mediaList[index];
               return MediaCard(
-                key: ValueKey(item.id),
-                item: item,
-                palette: _palette,
-                isGrid: true,
-                onToggleOnHold: (val) => _toggleMediaOnHold(item, val),
-                onUpdateProgress: () => _showUpdateProgressDialog(item),
-                onEditCover: () => _showEditCoverDialog(item),
-              );
+                              key: ValueKey(item.id),
+                              item: item,
+                              palette: _palette,
+                              isGrid: true,
+                              onToggleOnHold: (val) => _toggleMediaOnHold(item, val),
+                              onUpdateProgress: () => _showUpdateProgressDialog(item),
+                              onEditCover: () => _showEditCoverDialog(item),
+                              onScheduleToday: () => _scheduleMediaToday(item),
+                              onEditNotes: () => _editMediaNotes(item),
+                            );
             },
           )
         else
           ...mediaList.map((item) {
             return MediaCard(
-              key: ValueKey(item.id),
-              item: item,
-              palette: _palette,
-              isGrid: false,
-              onToggleOnHold: (val) => _toggleMediaOnHold(item, val),
-              onUpdateProgress: () => _showUpdateProgressDialog(item),
-              onEditCover: () => _showEditCoverDialog(item),
-            );
+                          key: ValueKey(item.id),
+                          item: item,
+                          palette: _palette,
+                          isGrid: false,
+                          onToggleOnHold: (val) => _toggleMediaOnHold(item, val),
+                          onUpdateProgress: () => _showUpdateProgressDialog(item),
+                          onEditCover: () => _showEditCoverDialog(item),
+                          onScheduleToday: () => _scheduleMediaToday(item),
+                          onEditNotes: () => _editMediaNotes(item),
+                        );
           }),
       ],
     );

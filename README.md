@@ -40,4 +40,20 @@ Developed with Flutter (Android, Web, Windows).
 ## Repository & Documentation
 - Detailed architectural specs and data models: see [`SDD.md`](./SDD.md).
 - Interactive prototype preview: `prototype.html`.
-- Automated test suite: `flutter test`.
+Automated test suite: flutter test.
+
+### Running the app in Chrome (desktop)
+
+1. Ensure web support is enabled:
+   ```
+   flutter config --enable-web
+   ```
+2. Get dependencies:
+   ```
+   flutter pub get
+   ```
+3. Launch the app in Chrome:
+   ```
+   flutter run -d chrome
+   ```
+   (Chrome must be installed and in your PATH.)

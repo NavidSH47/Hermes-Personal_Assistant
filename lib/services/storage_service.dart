@@ -118,14 +118,34 @@ class StorageService {
     await _prefs.setString(_keyMedia, raw);
   }
 
-  // --- INITIAL DATA SEEDING ---
+  Future<void> removeTask(String id) async {
+    final tasks = loadTasks();
+    tasks.removeWhere((t) => t.id == id);
+    await saveTasks(tasks);
+  }
+
+  Future<void> saveTask(Task task, [String? isoDate]) async {
+    final tasks = loadTasks();
+    final index = tasks.indexWhere((t) => t.id == task.id);
+    if (index >= 0) {
+      tasks[index] = task;
+    } else {
+      tasks.add(task);
+    }
+    await saveTasks(tasks);
+  }
+
+  Future<void> updateTask(Task task) async {
+    // Same as saveTask for simplicity
+    await saveTask(task);
+  }
+
   List<Task> _initialSampleTasks() {
     return [
       Task(
         id: 't_media_1',
         title: 'Watch 3 episodes of Succession (Season 3 finale)',
-        notes:
-            'Will advance series progress from 32 to 35 episodes automatically upon completion!',
+        notes: 'Will advance series progress from 32 to 35 episodes automatically upon completion!',
         category: TaskCategory.daily,
         status: TaskStatus.pending,
         orderIndex: 0,
@@ -136,8 +156,7 @@ class StorageService {
       Task(
         id: 't_1',
         title: 'Submit History Homework & Essay Draft',
-        notes:
-            'Must cover the Safavid architecture section. Verify citations and upload PDF to LMS.',
+        notes: 'Must cover the Safavid architecture section. Verify citations and upload PDF to LMS.',
         category: TaskCategory.daily,
         status: TaskStatus.pending,
         orderIndex: 1,
@@ -145,8 +164,7 @@ class StorageService {
       Task(
         id: 't_2',
         title: 'Groceries & Lunch Preparation',
-        notes:
-            '• Olive oil, basmati rice, mint, fresh lemons\n• Start cooking by 11:30 AM',
+        notes: '• Olive oil, basmati rice, mint, fresh lemons\n• Start cooking by 11:30 AM',
         category: TaskCategory.daily,
         status: TaskStatus.pending,
         orderIndex: 2,
@@ -154,8 +172,7 @@ class StorageService {
       Task(
         id: 't_3',
         title: 'Research Computer Vision project topic',
-        notes:
-            'Compare YOLOv11 vs RT-DETR for real-time edge devices. Prepare 3 bullet ideas.',
+        notes: 'Compare YOLOv11 vs RT-DETR for real-time edge devices. Prepare 3 bullet ideas.',
         category: TaskCategory.general,
         status: TaskStatus.pending,
         orderIndex: 0,
