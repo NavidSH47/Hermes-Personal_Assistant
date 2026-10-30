@@ -7,8 +7,12 @@ class TaskCard extends StatelessWidget {
   final VibePalette palette;
   final Function(TaskStatus) onStatusChange;
   final VoidCallback? onAssignToToday;
+  final VoidCallback? onDemoteToBacklog;
+  final VoidCallback? onPostponeOneDay;
+  final VoidCallback? onPostponeToDate;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
+  final int? dragIndex;
 
   const TaskCard({
     super.key,
@@ -16,8 +20,12 @@ class TaskCard extends StatelessWidget {
     required this.palette,
     required this.onStatusChange,
     this.onAssignToToday,
+    this.onDemoteToBacklog,
+    this.onPostponeOneDay,
+    this.onPostponeToDate,
     this.onDelete,
     this.onEdit,
+    this.dragIndex,
   });
 
   @override
@@ -108,11 +116,23 @@ class TaskCard extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(top: 2, right: 8),
-                  child: Icon(
-                    Icons.drag_indicator,
-                    size: 18,
-                    color: palette.textDim,
-                  ),
+                  child: dragIndex != null
+                      ? ReorderableDragStartListener(
+                          index: dragIndex!,
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.grab,
+                            child: Icon(
+                              Icons.drag_indicator,
+                              size: 18,
+                              color: palette.textDim,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          Icons.drag_indicator,
+                          size: 18,
+                          color: palette.textDim,
+                        ),
                 ),
                 Expanded(
                   child: InkWell(
@@ -176,12 +196,43 @@ class TaskCard extends StatelessWidget {
 
                       // Postpone to Tomorrow Button (Daily items)
                       if (task.category == TaskCategory.daily) ...[
-                        _buildStateButton(
-                          label: 'Tomorrow',
-                          isActive: task.status == TaskStatus.postponed,
-                          activeBg: const Color(0xFFF59E0B),
-                          activeFg: Colors.black,
-                          targetStatus: TaskStatus.postponed,
+                        InkWell(
+                          onTap: () {
+                            if (onPostponeOneDay != null) {
+                              onPostponeOneDay!();
+                            } else if (task.status == TaskStatus.postponed) {
+                              onStatusChange(TaskStatus.pending);
+                            } else {
+                              onStatusChange(TaskStatus.postponed);
+                            }
+                          },
+                          onLongPress: onPostponeToDate,
+                          borderRadius: BorderRadius.circular(6),
+                          child: Tooltip(
+                            message: 'Tap: Postpone +1 Day | Hold: Pick Future Date',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: task.status == TaskStatus.postponed
+                                    ? const Color(0xFFF59E0B)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Tomorrow',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: task.status == TaskStatus.postponed
+                                      ? Colors.black
+                                      : palette.textMuted,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 3),
                       ],
@@ -198,7 +249,7 @@ class TaskCard extends StatelessWidget {
                   ),
                 ),
 
-                // Right side: Assign to Today or Badge
+                // Right side: Assign to Today or Demote to Backlog or Badge
                 if (task.category == TaskCategory.general && onAssignToToday != null)
                   InkWell(
                     onTap: onAssignToToday,
@@ -233,12 +284,64 @@ class TaskCard extends StatelessWidget {
                       ),
                     ),
                   )
+                else if (task.category == TaskCategory.daily && onDemoteToBacklog != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InkWell(
+                        onTap: onDemoteToBacklog,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: palette.borderSubtle),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.move_to_inbox,
+                                size: 12,
+                                color: palette.textMuted,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                'To Backlog',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: palette.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        task.linkedMediaId != null
+                            ? '+${task.mediaUnitsToAdvance?.toInt() ?? 0} on check'
+                            : (task.status == TaskStatus.postponed
+                                ? 'Postponed (${task.postponedCount}x)'
+                                : 'Due Today'),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: task.linkedMediaId != null ? FontWeight.bold : FontWeight.normal,
+                          color: task.linkedMediaId != null ? palette.accentPrimary : palette.textDim,
+                        ),
+                      ),
+                    ],
+                  )
                 else
                   Text(
                     task.linkedMediaId != null
                         ? '+${task.mediaUnitsToAdvance?.toInt() ?? 0} on check'
                         : (task.status == TaskStatus.postponed
-                            ? 'Postponed (${task.postponedCount + 1}x)'
+                            ? 'Postponed (${task.postponedCount}x)'
                             : 'Due Today'),
                     style: TextStyle(
                       fontSize: 10,

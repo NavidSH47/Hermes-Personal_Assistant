@@ -1,34 +1,28 @@
+import 'package:shamsi_date/shamsi_date.dart';
 import '../models/task.dart';
-import 'storage_service.dart';
+import 'date_navigation_service.dart';
 
 /// Service handling advanced task rescheduling.
-/// Provides two actions:
-///  * `postponeOneDay` – moves a task to the next calendar day.
-///  * `postponeToDate` – moves a task to an arbitrary target date.
+/// Supports:
+///  * Single-tap Postpone: Transfers task to following day (relative to current date).
+///  * Long-press Postpone: Transfers task to an arbitrary target future date.
 class TaskRescheduleService {
-  final StorageService storage;
-
-  TaskRescheduleService(this.storage);
-
-  /// Moves the given task to tomorrow (ISO date string) and updates its status.
-  void postponeOneDay(Task task) {
-    final tomorrow = DateTime.now().add(Duration(days: 1));
-    final iso = _isoDate(tomorrow);
-    _moveTask(task, iso);
+  /// Postpones a task to tomorrow (1 day after [currentDate]).
+  static Task postponeOneDay(Task task, Jalali currentDate) {
+    final tomorrow = currentDate.addDays(1);
+    return task.copyWith(
+      status: TaskStatus.postponed,
+      postponedCount: task.postponedCount + 1,
+      targetDateJalali: DateNavigationService.formatJalaliKey(tomorrow),
+    );
   }
 
-  /// Moves the task to a specific [target] date (DateTime).
-  void postponeToDate(Task task, DateTime target) {
-    final iso = _isoDate(target);
-    _moveTask(task, iso);
+  /// Postpones a task to an arbitrary target future date.
+  static Task postponeToDate(Task task, Jalali targetDate) {
+    return task.copyWith(
+      status: TaskStatus.postponed,
+      postponedCount: task.postponedCount + 1,
+      targetDateJalali: DateNavigationService.formatJalaliKey(targetDate),
+    );
   }
-
-  void _moveTask(Task task, String isoDate) {
-    // Remove from current list and add to target date list via StorageService.
-    storage.removeTask(task.id);
-    final newTask = task.copyWith(status: TaskStatus.postponed);
-    storage.saveTask(newTask, isoDate);
-  }
-
-  String _isoDate(DateTime dt) => dt.toIso8601String().split('T').first;
 }

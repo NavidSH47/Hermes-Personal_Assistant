@@ -57,6 +57,15 @@ class StorageService {
     await _prefs.setString(_keyMediaView, mode);
   }
 
+  // --- COVER CACHE ---
+  String? loadCoverCache(String mediaId) {
+    return _prefs.getString('nsh_cover_cache_$mediaId');
+  }
+
+  Future<void> saveCoverCache(String mediaId, String coverUrl) async {
+    await _prefs.setString('nsh_cover_cache_$mediaId', coverUrl);
+  }
+
   // --- TASKS ---
   List<Task> loadTasks() {
     final raw = _prefs.getString(_keyTasks);

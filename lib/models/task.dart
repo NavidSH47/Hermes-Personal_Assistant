@@ -40,6 +40,7 @@ class Task {
     String? notes,
     TaskCategory? category,
     String? targetDateJalali,
+    bool clearTargetDate = false,
     TaskStatus? status,
     int? orderIndex,
     int? postponedCount,
@@ -54,7 +55,9 @@ class Task {
       title: title ?? this.title,
       notes: notes ?? this.notes,
       category: category ?? this.category,
-      targetDateJalali: targetDateJalali ?? this.targetDateJalali,
+      targetDateJalali: clearTargetDate
+          ? null
+          : (targetDateJalali ?? this.targetDateJalali),
       status: status ?? this.status,
       orderIndex: orderIndex ?? this.orderIndex,
       postponedCount: postponedCount ?? this.postponedCount,

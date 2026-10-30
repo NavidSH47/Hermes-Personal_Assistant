@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import '../models/shamsi_event.dart';
 import '../theme/app_theme.dart';
+import '../services/dual_calendar_service.dart';
+import '../services/date_navigation_service.dart';
 
 class ShamsiAgendaBanner extends StatefulWidget {
   final List<ShamsiEvent> events;
   final VibePalette palette;
   final Function(ShamsiEvent) onToggleCheckpoint;
   final Function(ShamsiEvent) onAddEvent;
+  final Jalali? selectedDate;
+  final Function(Jalali)? onDateChanged;
 
   const ShamsiAgendaBanner({
     super.key,
@@ -15,6 +19,8 @@ class ShamsiAgendaBanner extends StatefulWidget {
     required this.palette,
     required this.onToggleCheckpoint,
     required this.onAddEvent,
+    this.selectedDate,
+    this.onDateChanged,
   });
 
   @override
@@ -23,12 +29,21 @@ class ShamsiAgendaBanner extends StatefulWidget {
 
 class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
   bool _isCalendarExpanded = false;
-  late Jalali _selectedDate;
+  late Jalali _internalSelectedDate;
+
+  Jalali get _selectedDate => widget.selectedDate ?? _internalSelectedDate;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = Jalali.now();
+    _internalSelectedDate = widget.selectedDate ?? Jalali.now();
+  }
+
+  void _changeDate(Jalali newDate) {
+    setState(() {
+      _internalSelectedDate = newDate;
+    });
+    widget.onDateChanged?.call(newDate);
   }
 
   static const List<String> _shamsiMonthNames = [
@@ -76,6 +91,34 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
     return '';
   }
 
+  Widget _buildQuickNavButton({
+    required String label,
+    required VoidCallback onTap,
+    bool isHighlighted = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isHighlighted
+              ? widget.palette.accentPrimary
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
+            color: isHighlighted ? Colors.black : widget.palette.textMain,
+          ),
+        ),
+      ),
+    );
+  }
+
   List<ShamsiEvent> _eventsForSelectedDay() {
     return widget.events.where((e) {
       return e.isEnabled &&
@@ -103,13 +146,12 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
             return AlertDialog(
               backgroundColor: widget.palette.bgElevated,
               title: Text(
-                'افزودن مناسبت / تولد',
+                'Add Event / Reminder',
                 style: TextStyle(
                   color: widget.palette.textMain,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
-                textDirection: TextDirection.rtl,
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -117,20 +159,18 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'تاریخ: ${_selectedDate.day} ${_shamsiMonthNames[_selectedDate.month - 1]}',
+                      'Date: ${_selectedDate.day} ${_shamsiMonthNames[_selectedDate.month - 1]}',
                       style: TextStyle(
                         color: widget.palette.accentPrimary,
                         fontWeight: FontWeight.bold,
                       ),
-                      textDirection: TextDirection.rtl,
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: titleController,
-                      textDirection: TextDirection.rtl,
                       style: TextStyle(color: widget.palette.textMain),
                       decoration: InputDecoration(
-                        labelText: 'عنوان (مثلاً تولد دوست، سالگرد، امتحان)',
+                        labelText: 'Title (e.g. Birthday, Exam, Milestone)',
                         labelStyle: TextStyle(color: widget.palette.textMuted),
                         filled: true,
                         fillColor: widget.palette.bgSurface,
@@ -144,10 +184,9 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                     const SizedBox(height: 12),
                     TextField(
                       controller: noteController,
-                      textDirection: TextDirection.rtl,
                       style: TextStyle(color: widget.palette.textMain),
                       decoration: InputDecoration(
-                        labelText: 'توضیحات (اختیاری)',
+                        labelText: 'Notes (optional)',
                         labelStyle: TextStyle(color: widget.palette.textMuted),
                         filled: true,
                         fillColor: widget.palette.bgSurface,
@@ -164,7 +203,7 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                       dropdownColor: widget.palette.bgElevated,
                       style: TextStyle(color: widget.palette.textMain),
                       decoration: InputDecoration(
-                        labelText: 'دسته‌بندی',
+                        labelText: 'Category',
                         labelStyle: TextStyle(color: widget.palette.textMuted),
                         filled: true,
                         fillColor: widget.palette.bgSurface,
@@ -177,15 +216,15 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                       items: const [
                         DropdownMenuItem(
                           value: EventCategory.birthday,
-                          child: Text('🎂 تولد (Birthday)'),
+                          child: Text('🎂 Birthday'),
                         ),
                         DropdownMenuItem(
                           value: EventCategory.customDate,
-                          child: Text('🎯 رویداد شخصی / امتحان'),
+                          child: Text('🎯 Milestone / Exam'),
                         ),
                         DropdownMenuItem(
                           value: EventCategory.holiday,
-                          child: Text('🏛️ مناسبت مهم'),
+                          child: Text('🏛️ Important Date'),
                         ),
                       ],
                       onChanged: (val) {
@@ -201,7 +240,7 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
                   child: Text(
-                    'انصراف',
+                    'Cancel',
                     style: TextStyle(color: widget.palette.textMuted),
                   ),
                 ),
@@ -228,7 +267,7 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                       Navigator.pop(dialogCtx);
                     }
                   },
-                  child: const Text('ثبت'),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -284,9 +323,9 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                         ),
                       ),
                       Text(
-                        weekdayName,
+                        '$weekdayName • ${DualCalendarService.toGregorianString(_selectedDate)}',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 10,
                           color: widget.palette.textMuted,
                         ),
                       ),
@@ -312,7 +351,7 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '+ یادآوری',
+                        '+ Reminder',
                         style: TextStyle(
                           fontSize: 11,
                           color: widget.palette.accentPrimary,
@@ -344,7 +383,7 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                         children: [
                           const Text('📅 ', style: TextStyle(fontSize: 11)),
                           Text(
-                            _isCalendarExpanded ? 'بستن تقویم' : 'تقویم شمسی',
+                            _isCalendarExpanded ? 'Close Calendar' : 'Shamsi Calendar',
                             style: TextStyle(
                               fontSize: 11,
                               color: widget.palette.textMain,
@@ -358,6 +397,44 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                 ],
               ),
             ],
+          ),
+
+          const SizedBox(height: 10),
+
+          // Quick Date Navigation Bar: [ « Week ] [ ‹ Day ] [ Today ] [ Day › ] [ Week » ]
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+            decoration: BoxDecoration(
+              color: widget.palette.bgElevated,
+              border: Border.all(color: widget.palette.borderSubtle),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildQuickNavButton(
+                  label: '« Week',
+                  onTap: () => _changeDate(_selectedDate.addDays(-7)),
+                ),
+                _buildQuickNavButton(
+                  label: '‹ Day',
+                  onTap: () => _changeDate(_selectedDate.addDays(-1)),
+                ),
+                _buildQuickNavButton(
+                  label: 'Today',
+                  isHighlighted: DateNavigationService.isToday(_selectedDate),
+                  onTap: () => _changeDate(Jalali.now()),
+                ),
+                _buildQuickNavButton(
+                  label: 'Day ›',
+                  onTap: () => _changeDate(_selectedDate.addDays(1)),
+                ),
+                _buildQuickNavButton(
+                  label: 'Week »',
+                  onTap: () => _changeDate(_selectedDate.addDays(7)),
+                ),
+              ],
+            ),
           ),
 
           // Collapsible Shamsi Month Grid (Strictly RTL)
@@ -417,13 +494,13 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
 
                         return InkWell(
                           onTap: () {
-                            setState(() {
-                              _selectedDate = Jalali(
+                            _changeDate(
+                              Jalali(
                                 _selectedDate.year,
                                 _selectedDate.month,
                                 dayNum,
-                              );
-                            });
+                              ),
+                            );
                           },
                           borderRadius: BorderRadius.circular(6),
                           child: Container(
@@ -476,12 +553,12 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
 
           // Agenda Reminders & Checkpoints (Strictly RTL)
           Directionality(
-            textDirection: TextDirection.rtl,
+            textDirection: TextDirection.ltr,
             child: selectedDayEvents.isEmpty
                 ? Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      'هیچ مناسبت یا یادآوری برای این روز ثبت نشده است',
+                      'No reminders or events scheduled for this day.',
                       style: TextStyle(
                         fontSize: 11,
                         color: widget.palette.textDim,
@@ -489,7 +566,9 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                       ),
                     ),
                   )
-                : Column(
+                : Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Column(
                     children: selectedDayEvents.map((evt) {
                       Color bgColor;
                       Color borderColor;
@@ -543,7 +622,14 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
-                                        color: textColor,
+                                        color: evt.actionChecked
+                                            ? textColor.withValues(alpha: 0.5)
+                                            : textColor,
+                                        decoration: evt.actionChecked
+                                            ? TextDecoration.lineThrough
+                                            : null,
+                                        decorationColor: textColor,
+                                        decorationThickness: 1.5,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -582,6 +668,7 @@ class _ShamsiAgendaBannerState extends State<ShamsiAgendaBanner> {
                       );
                     }).toList(),
                   ),
+                ),
           ),
         ],
       ),

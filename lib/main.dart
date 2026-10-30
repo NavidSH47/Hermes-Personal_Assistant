@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import 'models/task.dart';
 import 'models/shamsi_event.dart';
 import 'models/media_item.dart';
 import 'theme/app_theme.dart';
 import 'services/storage_service.dart';
+import 'services/date_navigation_service.dart';
+import 'services/task_reschedule_service.dart';
+import 'services/task_stream_flow_service.dart';
+import 'services/reorder_service.dart';
+import 'services/media_ledger_cleanup_service.dart';
+import 'services/dual_calendar_service.dart';
+import 'services/media_label_service.dart';
+import 'services/media_goal_sync_service.dart';
 import 'widgets/shamsi_agenda_banner.dart';
 import 'widgets/task_card.dart';
 import 'widgets/media_card.dart';
@@ -86,22 +95,414 @@ class _HomeScreenState extends State<HomeScreen> {
   // Existing fields...
   // Added placeholder methods for media scheduling and notes editing
   void _scheduleMediaToday(MediaItem item) {
-    // Create a simple daily task linked to this media item
-    final newTask = Task(
-      id: 't_media_${item.id}',
-      title: 'Consume ${item.title}',
-      notes: '',
-      category: TaskCategory.daily,
-      status: TaskStatus.pending,
-      orderIndex: _tasks.length,
-      linkedMediaId: item.id,
-      mediaUnitsToAdvance: 1,
-      mediaTitle: item.title,
+    final remaining = MediaGoalSyncService.remainingUnits(item);
+    double initialAmount = 1.0;
+    if (item.type == MediaType.book) {
+      initialAmount = remaining >= 25 ? 25.0 : remaining;
+    } else if (item.type == MediaType.movie) {
+      initialAmount = remaining >= 30 ? 30.0 : remaining;
+    } else {
+      initialAmount = remaining >= 3 ? 3.0 : (remaining > 0 ? remaining : 1.0);
+    }
+    if (initialAmount <= 0 && remaining > 0) initialAmount = 1.0;
+
+    final amountController = TextEditingController(
+      text: MediaGoalSyncService.formatUnits(initialAmount),
     );
-    setState(() {
-      _tasks.add(newTask);
-    });
-    widget.storage.saveTasks(_tasks);
+    final noteController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dCtx, setDState) {
+            final curAmount = double.tryParse(amountController.text);
+            final error = MediaGoalSyncService.validateGoalAmount(curAmount, item);
+
+            void selectIncrement(double delta) {
+              final currentVal = double.tryParse(amountController.text) ?? 0.0;
+              final newVal = (currentVal + delta).clamp(1.0, remaining);
+              amountController.text = MediaGoalSyncService.formatUnits(newVal);
+              setDState(() {});
+            }
+
+            void finishRemaining() {
+              amountController.text = MediaGoalSyncService.formatUnits(remaining);
+              setDState(() {});
+            }
+
+            return AlertDialog(
+              backgroundColor: _palette.bgElevated,
+              title: Text(
+                'Schedule Daily Goal',
+                style: TextStyle(
+                  color: _palette.textMain,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _palette.bgSurface,
+                        border: Border.all(color: _palette.borderSubtle),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(item.iconEmoji, style: const TextStyle(fontSize: 24)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.title,
+                                  style: TextStyle(
+                                    color: _palette.textMain,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${item.progressCurrent.toInt()} / ${item.progressTotal.toInt()} ${item.metricUnit} (${item.progressPercent}%)',
+                                  style: TextStyle(
+                                    color: _palette.accentPrimary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'How many ${item.metricUnit} do you want to accomplish today?',
+                      style: TextStyle(
+                        color: _palette.textMain,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: _palette.textMain),
+                      decoration: InputDecoration(
+                        labelText: 'Target Amount (${item.metricUnit})',
+                        labelStyle: TextStyle(color: _palette.textMuted),
+                        errorText: error,
+                        filled: true,
+                        fillColor: _palette.bgSurface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onChanged: (_) => setDState(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        ActionChip(
+                          label: const Text('+5'),
+                          labelStyle: TextStyle(fontSize: 11, color: _palette.textMain),
+                          backgroundColor: _palette.bgSurface,
+                          onPressed: remaining >= 5 ? () => selectIncrement(5) : null,
+                        ),
+                        ActionChip(
+                          label: const Text('+10'),
+                          labelStyle: TextStyle(fontSize: 11, color: _palette.textMain),
+                          backgroundColor: _palette.bgSurface,
+                          onPressed: remaining >= 10 ? () => selectIncrement(10) : null,
+                        ),
+                        ActionChip(
+                          label: const Text('+25'),
+                          labelStyle: TextStyle(fontSize: 11, color: _palette.textMain),
+                          backgroundColor: _palette.bgSurface,
+                          onPressed: remaining >= 25 ? () => selectIncrement(25) : null,
+                        ),
+                        ActionChip(
+                          label: Text('Finish (${MediaGoalSyncService.formatUnits(remaining)})'),
+                          labelStyle: TextStyle(fontSize: 11, color: _palette.accentPrimary),
+                          backgroundColor: _palette.bgSurface,
+                          onPressed: remaining > 0 ? finishRemaining : null,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: noteController,
+                      style: TextStyle(color: _palette.textMain),
+                      decoration: InputDecoration(
+                        labelText: 'Optional note (e.g. read chapter 4, watch with friends)',
+                        labelStyle: TextStyle(color: _palette.textMuted),
+                        filled: true,
+                        fillColor: _palette.bgSurface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dCtx),
+                  child: Text('Cancel', style: TextStyle(color: _palette.textMuted)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _palette.accentPrimary,
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: error == null && curAmount != null && curAmount > 0
+                      ? () {
+                          final todayKey = DateNavigationService.formatJalaliKey(Jalali.now());
+                          final task = MediaGoalSyncService.createLinkedTask(
+                            item: item,
+                            amount: curAmount,
+                            todayKey: todayKey,
+                            orderIndex: _tasks.length,
+                            notes: noteController.text.trim(),
+                          );
+                          setState(() {
+                            _tasks.add(task);
+                          });
+                          widget.storage.saveTasks(_tasks);
+                          Navigator.pop(dCtx);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                MediaGoalSyncService.scheduledNotification(item, curAmount),
+                              ),
+                              action: SnackBarAction(
+                                label: 'View in Daily Pulse',
+                                textColor: _palette.accentPrimary,
+                                onPressed: () {
+                                  setState(() {
+                                    _currentTab = 'notes';
+                                  });
+                                },
+                              ),
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: const Text('Schedule'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditLabelsDialog(MediaItem item) {
+    List<String> assignedLabels = List<String>.from(item.labels);
+    final customTagController = TextEditingController();
+    final allExisting = _mediaItems.expand((m) => m.labels).toSet().toList();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dCtx, setDState) {
+            final suggestions = MediaLabelService.getSuggestions(
+              assignedLabels,
+              allExisting,
+            );
+
+            void addTag(String tag) {
+              setDState(() {
+                assignedLabels = MediaLabelService.addLabel(assignedLabels, tag);
+              });
+            }
+
+            void removeTag(String tag) {
+              setDState(() {
+                assignedLabels = MediaLabelService.removeLabel(assignedLabels, tag);
+              });
+            }
+
+            return AlertDialog(
+              backgroundColor: _palette.bgElevated,
+              title: Text(
+                'Edit Labels: ${item.title}',
+                style: TextStyle(
+                  color: _palette.textMain,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Assigned Labels:',
+                      style: TextStyle(
+                        color: _palette.textMain,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    assignedLabels.isEmpty
+                        ? Text(
+                            'No labels assigned yet.',
+                            style: TextStyle(
+                              color: _palette.textDim,
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        : Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: assignedLabels.map((l) {
+                              return Chip(
+                                label: Text(l),
+                                labelStyle: TextStyle(
+                                  color: _palette.textMain,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                backgroundColor: _palette.bgSurface,
+                                deleteIcon: const Icon(Icons.close, size: 14),
+                                deleteIconColor: _palette.textMuted,
+                                onDeleted: () => removeTag(l),
+                              );
+                            }).toList(),
+                          ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Add Custom Label:',
+                      style: TextStyle(
+                        color: _palette.textMain,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: customTagController,
+                            style: TextStyle(color: _palette.textMain),
+                            decoration: InputDecoration(
+                              hintText: 'e.g. Masterpiece, RPG...',
+                              hintStyle: TextStyle(color: _palette.textDim),
+                              filled: true,
+                              fillColor: _palette.bgSurface,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onSubmitted: (val) {
+                              if (val.trim().isNotEmpty) {
+                                addTag(val);
+                                customTagController.clear();
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _palette.accentPrimary,
+                            foregroundColor: Colors.black,
+                          ),
+                          onPressed: () {
+                            if (customTagController.text.trim().isNotEmpty) {
+                              addTag(customTagController.text);
+                              customTagController.clear();
+                            }
+                          },
+                          child: const Text('Add'),
+                        ),
+                      ],
+                    ),
+                    if (suggestions.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Text(
+                        'Suggestions:',
+                        style: TextStyle(
+                          color: _palette.textMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: suggestions.map((tag) {
+                          return ActionChip(
+                            label: Text('+ $tag'),
+                            labelStyle: TextStyle(
+                              fontSize: 11,
+                              color: _palette.accentPrimary,
+                            ),
+                            backgroundColor: _palette.bgSurface,
+                            onPressed: () => addTag(tag),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dCtx),
+                  child: Text('Cancel', style: TextStyle(color: _palette.textMuted)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _palette.accentPrimary,
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      final idx = _mediaItems.indexWhere((m) => m.id == item.id);
+                      if (idx != -1) {
+                        _mediaItems[idx] =
+                            MediaLabelService.updateMediaLabels(item, assignedLabels);
+                      }
+                    });
+                    widget.storage.saveMediaItems(_mediaItems);
+                    Navigator.pop(dCtx);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _editMediaNotes(MediaItem item) async {
@@ -146,6 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _mediaSort = 'custom';
   bool _isMediaGrid = false;
 
+  late Jalali _selectedDate;
   late List<Task> _tasks;
   late List<ShamsiEvent> _events;
   late List<MediaItem> _mediaItems;
@@ -153,6 +555,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedDate = Jalali.now();
     _tasks = widget.storage.loadTasks();
     _events = widget.storage.loadShamsiEvents();
     _mediaItems = widget.storage.loadMediaItems();
@@ -176,6 +579,32 @@ class _HomeScreenState extends State<HomeScreen> {
           status: status,
           postponedCount: newPostponedCount,
         );
+
+        // Automatic Progress Sync on Task Completion ("Done")
+        if (task.linkedMediaId != null) {
+          final mIndex =
+              _mediaItems.indexWhere((m) => m.id == task.linkedMediaId);
+          if (mIndex != -1) {
+            final units = task.mediaUnitsToAdvance ?? 1.0;
+            if (task.status != TaskStatus.done && status == TaskStatus.done) {
+              _mediaItems[mIndex] =
+                  MediaGoalSyncService.advanceProgress(_mediaItems[mIndex], units);
+              widget.storage.saveMediaItems(_mediaItems);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(MediaGoalSyncService.celebrationMessage(
+                      _mediaItems[mIndex])),
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            } else if (task.status == TaskStatus.done &&
+                status != TaskStatus.done) {
+              _mediaItems[mIndex] =
+                  MediaGoalSyncService.revertProgress(_mediaItems[mIndex], units);
+              widget.storage.saveMediaItems(_mediaItems);
+            }
+          }
+        }
       }
     });
     widget.storage.saveTasks(_tasks);
@@ -185,7 +614,8 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       final index = _tasks.indexWhere((t) => t.id == task.id);
       if (index != -1) {
-        _tasks[index] = task.copyWith(category: TaskCategory.daily);
+        _tasks[index] =
+            TaskStreamFlowService.promoteToDaily(task, _selectedDate);
       }
     });
     widget.storage.saveTasks(_tasks);
@@ -194,6 +624,174 @@ class _HomeScreenState extends State<HomeScreen> {
         content: Text('Task moved to Today\'s Focus!'),
         duration: Duration(seconds: 1),
       ),
+    );
+  }
+
+  void _demoteTaskToBacklog(Task task) {
+    setState(() {
+      final index = _tasks.indexWhere((t) => t.id == task.id);
+      if (index != -1) {
+        _tasks[index] = TaskStreamFlowService.demoteToBacklog(task);
+      }
+    });
+    widget.storage.saveTasks(_tasks);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Task moved to Backlog / Orbit!'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _postponeTaskOneDay(Task task) {
+    setState(() {
+      final index = _tasks.indexWhere((t) => t.id == task.id);
+      if (index != -1) {
+        _tasks[index] =
+            TaskRescheduleService.postponeOneDay(task, _selectedDate);
+      }
+    });
+    widget.storage.saveTasks(_tasks);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Task postponed to tomorrow!'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _postponeTaskToDate(Task task, Jalali targetDate) {
+    setState(() {
+      final index = _tasks.indexWhere((t) => t.id == task.id);
+      if (index != -1) {
+        _tasks[index] =
+            TaskRescheduleService.postponeToDate(task, targetDate);
+      }
+    });
+    widget.storage.saveTasks(_tasks);
+    final formatted = DualCalendarService.toShamsiString(targetDate);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Task rescheduled to $formatted'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _showPostponeDatePickerModal(Task task) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: _palette.bgElevated,
+          title: Text(
+            'Reschedule Task',
+            style: TextStyle(
+              color: _palette.textMain,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Select target date for "${task.title}":',
+                  style: TextStyle(color: _palette.textMuted, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                ...List.generate(7, (i) {
+                  final daysToAdd = i == 0
+                      ? 1
+                      : (i == 1
+                          ? 2
+                          : (i == 2
+                              ? 3
+                              : (i == 3
+                                  ? 7
+                                  : (i == 4
+                                      ? 14
+                                      : (i == 5 ? 21 : 30)))));
+                  final target = _selectedDate.addDays(daysToAdd);
+                  final label = i == 0
+                      ? 'Tomorrow'
+                      : (i == 3
+                          ? '+1 Week'
+                          : (i == 4
+                              ? '+2 Weeks'
+                              : (i == 6 ? '+1 Month' : '+$daysToAdd Days')));
+                  final shamsiStr = DualCalendarService.toShamsiString(target);
+                  final gregStr = DualCalendarService.toGregorianString(target);
+
+                  return InkWell(
+                    onTap: () {
+                      _postponeTaskToDate(task, target);
+                      Navigator.pop(ctx);
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _palette.bgSurface,
+                        border: Border.all(color: _palette.borderSubtle),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: _palette.accentPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                shamsiStr,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _palette.textMain,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            gregStr,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: _palette.textDim,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: _palette.textMuted),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -298,6 +896,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: title,
                           notes: notesController.text.trim(),
                           category: category,
+                          targetDateJalali: category == TaskCategory.daily
+                              ? DateNavigationService.formatJalaliKey(_selectedDate)
+                              : null,
                         );
                         setState(() {
                           _tasks.insert(0, newTask);
@@ -388,7 +989,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           keyboardType: TextInputType.number,
                           style: TextStyle(color: _palette.textMain),
                           decoration: InputDecoration(
-                            labelText: 'Current',
+                            labelText: MediaLedgerCleanupService.currentUnitInputLabelFor(item.type),
                             labelStyle: TextStyle(color: _palette.textMuted),
                             filled: true,
                             fillColor: _palette.bgSurface,
@@ -405,7 +1006,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           keyboardType: TextInputType.number,
                           style: TextStyle(color: _palette.textMain),
                           decoration: InputDecoration(
-                            labelText: 'Total',
+                            labelText: MediaLedgerCleanupService.unitInputLabelFor(item.type),
                             labelStyle: TextStyle(color: _palette.textMuted),
                             filled: true,
                             fillColor: _palette.bgSurface,
@@ -583,7 +1184,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final yearController =
         TextEditingController(text: DateTime.now().year.toString());
     final totalController = TextEditingController(text: '100');
+    final tagInputController = TextEditingController();
     MediaType selectedType = MediaType.book;
+    List<String> selectedLabels = [];
 
     showDialog(
       context: context,
@@ -682,7 +1285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             keyboardType: TextInputType.number,
                             style: TextStyle(color: _palette.textMain),
                             decoration: InputDecoration(
-                              labelText: 'Total Units',
+                              labelText: MediaLedgerCleanupService.unitInputLabelFor(selectedType),
                               labelStyle: TextStyle(color: _palette.textMuted),
                               filled: true,
                               fillColor: _palette.bgSurface,
@@ -691,6 +1294,122 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Labels / Tags:',
+                      style: TextStyle(
+                        color: _palette.textMain,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: MediaLabelService.presetLabels.map((preset) {
+                        final isSelected = selectedLabels.contains(preset);
+                        return FilterChip(
+                          label: Text(preset),
+                          selected: isSelected,
+                          selectedColor: _palette.accentPrimary.withValues(alpha: 0.3),
+                          checkmarkColor: _palette.accentPrimary,
+                          labelStyle: TextStyle(
+                            fontSize: 11,
+                            color: isSelected ? _palette.accentPrimary : _palette.textMain,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          backgroundColor: _palette.bgSurface,
+                          onSelected: (val) {
+                            setDState(() {
+                              if (val) {
+                                selectedLabels = MediaLabelService.addLabel(selectedLabels, preset);
+                              } else {
+                                selectedLabels = MediaLabelService.removeLabel(selectedLabels, preset);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    if (selectedLabels.any((l) => !MediaLabelService.presetLabels.contains(l))) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: selectedLabels
+                            .where((l) => !MediaLabelService.presetLabels.contains(l))
+                            .map((custom) {
+                          return Chip(
+                            label: Text(custom),
+                            labelStyle: TextStyle(
+                              fontSize: 11,
+                              color: _palette.textMain,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            backgroundColor: _palette.bgSurface,
+                            deleteIcon: const Icon(Icons.close, size: 14),
+                            deleteIconColor: _palette.textMuted,
+                            onDeleted: () {
+                              setDState(() {
+                                selectedLabels = MediaLabelService.removeLabel(selectedLabels, custom);
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: tagInputController,
+                            style: TextStyle(color: _palette.textMain),
+                            decoration: InputDecoration(
+                              hintText: '+ Add Custom Tag',
+                              hintStyle: TextStyle(color: _palette.textDim),
+                              filled: true,
+                              fillColor: _palette.bgSurface,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onSubmitted: (val) {
+                              if (val.trim().isNotEmpty) {
+                                setDState(() {
+                                  selectedLabels = MediaLabelService.addLabel(selectedLabels, val);
+                                });
+                                tagInputController.clear();
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _palette.bgSurface,
+                            foregroundColor: _palette.accentPrimary,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          ),
+                          onPressed: () {
+                            if (tagInputController.text.trim().isNotEmpty) {
+                              setDState(() {
+                                selectedLabels = MediaLabelService.addLabel(
+                                  selectedLabels,
+                                  tagInputController.text,
+                                );
+                              });
+                              tagInputController.clear();
+                            }
+                          },
+                          child: const Text('+ Add'),
                         ),
                       ],
                     ),
@@ -720,6 +1439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         type: selectedType,
                         title: title,
                         releaseYear: year,
+                        labels: selectedLabels,
                         progressCurrent: 0,
                         progressTotal: total,
                       );
@@ -741,10 +1461,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<Task> get _dailyTasks =>
-      _tasks.where((t) => t.category == TaskCategory.daily).toList();
+      DateNavigationService.getTasksForDate(_tasks, _selectedDate);
 
-  List<Task> get _backlogTasks =>
-      _tasks.where((t) => t.category == TaskCategory.general).toList();
+  List<Task> get _backlogTasks => _tasks
+      .where((t) => t.category == TaskCategory.general)
+      .toList()
+    ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
 
   List<MediaItem> get _filteredMediaItems {
     var list = _mediaItems.where((m) {
@@ -938,6 +1660,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildDailyPulseView() {
     final daily = _dailyTasks;
     final backlog = _backlogTasks;
+    final isViewingToday = DateNavigationService.isToday(_selectedDate);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -945,6 +1668,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ShamsiAgendaBanner(
           events: _events,
           palette: _palette,
+          selectedDate: _selectedDate,
+          onDateChanged: (newDate) => setState(() => _selectedDate = newDate),
           onToggleCheckpoint: _toggleShamsiCheckpoint,
           onAddEvent: _addShamsiEvent,
         ),
@@ -955,7 +1680,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Text(
-                  '📌 Today\'s Focus',
+                  isViewingToday
+                      ? '📌 Today\'s Focus'
+                      : '📌 Focus for ${DualCalendarService.toShamsiString(_selectedDate)}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -984,7 +1711,7 @@ class _HomeScreenState extends State<HomeScreen> {
             InkWell(
               onTap: () => _openAddTaskModal(TaskCategory.daily),
               child: Text(
-                '+ Add for Today',
+                isViewingToday ? '+ Add for Today' : '+ Add for This Day',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -999,7 +1726,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'No tasks scheduled for today. Add one above!',
+              isViewingToday
+                  ? 'No tasks scheduled for today. Add one above!'
+                  : 'No tasks scheduled for this day. Add one above!',
               style: TextStyle(
                 fontSize: 12,
                 color: _palette.textDim,
@@ -1008,15 +1737,40 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         else
-          ...daily.map((task) {
-            return TaskCard(
-              key: ValueKey(task.id),
-              task: task,
-              palette: _palette,
-              onStatusChange: (status) => _setTaskStatus(task, status),
-              onDelete: () => _deleteTask(task),
-            );
-          }),
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            itemCount: daily.length,
+            // ignore: deprecated_member_use
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                final reordered =
+                    ReorderService.reorderTasks(daily, oldIndex, newIndex);
+                for (final updated in reordered) {
+                  final idx = _tasks.indexWhere((t) => t.id == updated.id);
+                  if (idx != -1) {
+                    _tasks[idx] = updated;
+                  }
+                }
+              });
+              widget.storage.saveTasks(_tasks);
+            },
+            itemBuilder: (context, index) {
+              final task = daily[index];
+              return TaskCard(
+                key: ValueKey(task.id),
+                task: task,
+                palette: _palette,
+                dragIndex: index,
+                onStatusChange: (status) => _setTaskStatus(task, status),
+                onPostponeOneDay: () => _postponeTaskOneDay(task),
+                onPostponeToDate: () => _showPostponeDatePickerModal(task),
+                onDemoteToBacklog: () => _demoteTaskToBacklog(task),
+                onDelete: () => _deleteTask(task),
+              );
+            },
+          ),
         const SizedBox(height: 14),
         Divider(color: _palette.borderSubtle),
         const SizedBox(height: 10),
@@ -1079,16 +1833,38 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         else
-          ...backlog.map((task) {
-            return TaskCard(
-              key: ValueKey(task.id),
-              task: task,
-              palette: _palette,
-              onStatusChange: (status) => _setTaskStatus(task, status),
-              onAssignToToday: () => _assignTaskToToday(task),
-              onDelete: () => _deleteTask(task),
-            );
-          }),
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            itemCount: backlog.length,
+            // ignore: deprecated_member_use
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                final reordered =
+                    ReorderService.reorderTasks(backlog, oldIndex, newIndex);
+                for (final updated in reordered) {
+                  final idx = _tasks.indexWhere((t) => t.id == updated.id);
+                  if (idx != -1) {
+                    _tasks[idx] = updated;
+                  }
+                }
+              });
+              widget.storage.saveTasks(_tasks);
+            },
+            itemBuilder: (context, index) {
+              final task = backlog[index];
+              return TaskCard(
+                key: ValueKey(task.id),
+                task: task,
+                palette: _palette,
+                dragIndex: index,
+                onStatusChange: (status) => _setTaskStatus(task, status),
+                onAssignToToday: () => _assignTaskToToday(task),
+                onDelete: () => _deleteTask(task),
+              );
+            },
+          ),
       ],
     );
   }
@@ -1292,6 +2068,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               onEditCover: () => _showEditCoverDialog(item),
                               onScheduleToday: () => _scheduleMediaToday(item),
                               onEditNotes: () => _editMediaNotes(item),
+                              onEditLabels: () => _showEditLabelsDialog(item),
                             );
             },
           )
@@ -1307,6 +2084,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onEditCover: () => _showEditCoverDialog(item),
                           onScheduleToday: () => _scheduleMediaToday(item),
                           onEditNotes: () => _editMediaNotes(item),
+                          onEditLabels: () => _showEditLabelsDialog(item),
                         );
           }),
       ],

@@ -1,17 +1,26 @@
+import 'package:shamsi_date/shamsi_date.dart';
 import '../models/task.dart';
-import 'storage_service.dart';
+import 'date_navigation_service.dart';
 
-/// Service for managing task stream flow rules.
-/// Currently provides:
-///  * `demoteTask` – move a task from Today back to Backlog/Orbit.
+/// Service managing task stream flow rules and bidirectional transfers
+/// between Daily Focus and General Backlog/Orbit.
 class TaskStreamFlowService {
-  final StorageService storage;
+  /// Promotes a task from General Backlog/Orbit to Today's Focus on [date].
+  static Task promoteToDaily(Task task, Jalali date) {
+    return task.copyWith(
+      category: TaskCategory.daily,
+      targetDateJalali: DateNavigationService.formatJalaliKey(date),
+    );
+  }
 
-  TaskStreamFlowService(this.storage);
-
-  void demoteTask(Task task) {
-    // Set status back to pending and remove any Today-specific flag.
-    final demoted = task.copyWith(status: TaskStatus.pending);
-    storage.updateTask(demoted);
+  /// Demotes a Daily Focus task back to General Backlog/Orbit.
+  static Task demoteToBacklog(Task task) {
+    return task.copyWith(
+      category: TaskCategory.general,
+      clearTargetDate: true,
+      status: task.status == TaskStatus.postponed
+          ? TaskStatus.pending
+          : task.status,
+    );
   }
 }

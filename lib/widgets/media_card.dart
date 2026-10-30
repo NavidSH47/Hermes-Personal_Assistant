@@ -11,6 +11,7 @@ class MediaCard extends StatelessWidget {
   final VoidCallback onEditCover;
   final VoidCallback onScheduleToday;
   final VoidCallback onEditNotes;
+  final VoidCallback onEditLabels;
   final VoidCallback? onDelete;
 
   const MediaCard({
@@ -23,6 +24,7 @@ class MediaCard extends StatelessWidget {
     required this.onEditCover,
     required this.onScheduleToday,
     required this.onEditNotes,
+    required this.onEditLabels,
     this.onDelete,
   });
 
@@ -90,34 +92,67 @@ class MediaCard extends StatelessWidget {
                       ],
                     ),
 
-                    if (item.labels.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 2,
-                        children: item.labels.map((l) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.06),
-                              border: Border.all(color: palette.borderSubtle),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              l,
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: palette.textMuted,
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: onEditLabels,
+                      child: item.labels.isNotEmpty
+                          ? Wrap(
+                              spacing: 4,
+                              runSpacing: 2,
+                              children: [
+                                ...item.labels.map((l) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.06),
+                                      border: Border.all(color: palette.borderSubtle),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      l,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        color: palette.textMuted,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: palette.borderSubtle),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '🏷️ Edit',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: palette.accentPrimary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Text(
+                                '🏷️ + Add labels...',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: palette.textDim,
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
+                    ),
 
                     const SizedBox(height: 4),
 
@@ -278,29 +313,6 @@ class MediaCard extends StatelessWidget {
               ),
             ],
           ),
-
-          // On-hold top corner chip
-          if (item.isOnHold)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0x33F59E0B),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'ON-HOLD',
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFFFBBF24),
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -364,7 +376,69 @@ class MediaCard extends StatelessWidget {
 
           const SizedBox(height: 6),
 
-          // Action row
+          // Action row 1: Schedule + Labels
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              InkWell(
+                onTap: onScheduleToday,
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: palette.borderSubtle),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_today, size: 9, color: palette.accentPrimary),
+                      const SizedBox(width: 3),
+                      Text(
+                        'Schedule',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: palette.accentPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: onEditLabels,
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: palette.bgSurface,
+                    border: Border.all(color: palette.borderSubtle),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('🏷️', style: TextStyle(fontSize: 8)),
+                      const SizedBox(width: 2),
+                      Text(
+                        item.labels.isEmpty ? 'Labels' : '${item.labels.length}',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: palette.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 5),
+
+          // Action row 2: Hold & Update
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -424,6 +498,8 @@ class MediaCard extends StatelessWidget {
             Image.network(
               item.coverUrl!,
               fit: BoxFit.cover,
+              cacheWidth: 300,
+              cacheHeight: 450,
               errorBuilder: (context, error, stackTrace) =>
                   _buildPlaceholderEmoji(),
             )

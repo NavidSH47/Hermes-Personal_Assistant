@@ -343,16 +343,46 @@ class AppTheme {
     }
   }
 
+  static TextTheme createTextTheme(String fontFamily, List<String> fallback) {
+    TextStyle applyFont(TextStyle? base) {
+      return (base ?? const TextStyle()).copyWith(
+        fontFamily: fontFamily,
+        fontFamilyFallback: fallback,
+      );
+    }
+
+    final base = ThemeData.dark().textTheme;
+    return base.copyWith(
+      displayLarge: applyFont(base.displayLarge),
+      displayMedium: applyFont(base.displayMedium),
+      displaySmall: applyFont(base.displaySmall),
+      headlineLarge: applyFont(base.headlineLarge),
+      headlineMedium: applyFont(base.headlineMedium),
+      headlineSmall: applyFont(base.headlineSmall),
+      titleLarge: applyFont(base.titleLarge),
+      titleMedium: applyFont(base.titleMedium),
+      titleSmall: applyFont(base.titleSmall),
+      bodyLarge: applyFont(base.bodyLarge),
+      bodyMedium: applyFont(base.bodyMedium),
+      bodySmall: applyFont(base.bodySmall),
+      labelLarge: applyFont(base.labelLarge),
+      labelMedium: applyFont(base.labelMedium),
+      labelSmall: applyFont(base.labelSmall),
+    );
+  }
+
   static ThemeData createTheme(ThemeVibe vibe, AppFontStyle font) {
     final palette = vibes[vibe] ?? vibes[ThemeVibe.deepAmethyst]!;
     final fontFamily = getFontFamilyName(font);
     final fallback = getFontFallbackList(font);
+    final textTheme = createTextTheme(fontFamily, fallback);
 
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: palette.bgCanvas,
       fontFamily: fontFamily,
       fontFamilyFallback: fallback,
+      textTheme: textTheme,
       colorScheme: ColorScheme.dark(
         surface: palette.bgSurface,
         primary: palette.accentPrimary,

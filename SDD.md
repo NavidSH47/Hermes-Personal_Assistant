@@ -110,35 +110,99 @@ NSH Assistant is a zero-latency, local-first daily companion combining:
   - `7.0 - 8.5`: Teal to Emerald (`#26A69A` -> `#43A047`)
   - `9.0 - 10.0`: Deep Emerald to Royal Violet (`#2E7D32` -> `#7E57C2`)
 - **Cover Management:** Local image file picker, direct image URL, or removal fallback with title initials.
-### 4.3 Improvement Phase & In-Flight Enhancements
+### 4.3 Completed Enhancements (Refinement & UX Polishing Phase)
 
-#### Prioritized In-Flight Tasks
-
-1. ✅ Interactive Date Navigation & Day Tasks History
-2. ✅ Advanced Task Rescheduling & Postponing
-3. ✅ Task Stream Flow Rules
-4. ✅ Desktop & Mobile Reordering Compatibility
-5. ✅ Media Ledger Cleanups
-6. Dual Calendar Integration & Event Checkpoints
-The project is currently in the **active refinement and UX polishing phase**, targeting the following items:
-1. **Interactive Date Navigation & Day Tasks History:**
+1. ✅ **Interactive Date Navigation & Day Tasks History:**
    - Quick navigation bar (`« Week`, `‹ Day`, `Today`, `Day ›`, `Week »`) bound to persistent daily task registries.
    - Preserves completed and unfinished states as the user shifts across historical or future dates.
-2. **Advanced Task Rescheduling & Postponing:**
+2. ✅ **Advanced Task Rescheduling & Postponing:**
    - Single-tap `Postpone`: Automatically transfers task to the following day and hides it from today's list.
    - Long-press `Postpone`: Triggers side/modal calendar grid to pick any arbitrary target future date.
-3. **Task Stream Flow Rules:**
+3. ✅ **Task Stream Flow Rules:**
    - Prevention of accidental auto-scrolling/focus transitions into Today's list.
    - Bidirectional movement: Ability to demote Today tasks back to General Backlog/Orbit.
-4. **Desktop & Mobile Reordering Compatibility:**
+4. ✅ **Desktop & Mobile Reordering Compatibility:**
    - Pointer and drag-and-drop listener fixes for Flutter web (Chrome) and touch gesture listeners on mobile.
-5. **Media Ledger Cleanups:**
+5. ✅ **Media Ledger Cleanups:**
    - Removal of overlapping on-hold text labels over release year badges (relies cleanly on accent border and checkbox state).
    - Local cover art disk/cache persistence (prevents redundant network re-fetching across app restarts).
    - Dynamic unit label binding in the Add/Edit dialog based on selected media type (Pages, Episodes, Minutes, Chapters).
-6. **Dual Calendar Integration & Event Checkpoints:**
+6. ✅ **Dual Calendar Integration & Event Checkpoints:**
    - Bilingual date display: Solar Hijri (Shamsi) paired with its Gregorian date equivalent.
    - Visual strikethrough styling for completed checkpoints in calendar event reminders.
+
+### 4.4 Completed Phase: Next Iteration Enhancements & Feature Specs
+
+#### Completed Upcoming Tasks
+
+1. ✅ **Chrome Web Typography & Dynamic Font Switching:**
+   - **Problem Statement:** Font family selection in the Settings drawer fails to render on Flutter Web (Chrome) due to missing web font declarations and lack of global `TextTheme` font family propagation.
+   - **Architecture & Implementation Requirements:**
+     - Configure web font resolution: Added Google Fonts web imports (`Vazirmatn`, `Comic Neue`, `Quicksand`, `Fira Code`) in `web/index.html` to ensure the Chrome canvas and DOM renderers have access to the font assets.
+     - Global `TextTheme` mapping: In `AppTheme.createTheme`, explicitly applied `fontFamily` and `fontFamilyFallback` across all `ThemeData.textTheme` text styles (`bodyLarge`, `bodyMedium`, `titleMedium`, `labelSmall`, etc.) via `AppTheme.createTextTheme`.
+     - Added `WebTypographyService` verification probe to validate web font stylesheets and typography resolution.
+
+2. ✅ **English UI Harmonization for Shamsi Calendar Banner:**
+   - **Problem Statement:** Several interactive buttons, dialog titles, and system messages in `ShamsiAgendaBanner` remained in Persian, violating the Clean English UI principle outlined in Section 4.1.
+   - **Architecture & Implementation Requirements:**
+     - Replaced Persian button labels with clean English:
+       - `+ یادآوری` -> `+ Reminder`
+       - `تقویم شمسی` / `بستن تقویم` -> `Shamsi Calendar` / `Close Calendar`
+     - Empty state placeholder updated:
+       - `هیچ مناسبت یا یادآوری برای این روز ثبت نشده است` -> `No reminders or events scheduled for this day.`
+     - Dialog English localization:
+       - Title: `Add Event / Reminder`
+       - Labels: `Date:`, `Title (e.g. Birthday, Exam, Milestone)`, `Notes (optional)`, `Category` (Birthday, Milestone / Exam, Important Date)
+       - Actions: `Cancel` and `Save`
+     - Maintained Persian strictly for native Shamsi calendar components (month names, weekday headers) and user-authored event strings.
+
+3. ✅ **Media Scheduling Immediate Feedback & Notifications:**
+   - **Problem Statement:** Scheduling a media item as a daily goal gives no immediate user feedback upon creation.
+   - **Architecture & Implementation Requirements:**
+     - Triggered an immediate `SnackBar` notification upon goal creation:
+       - Template: `🎯 Scheduled: [N] [Unit] of [Title] for Today!` (e.g., `🎯 Scheduled: 25 Pages of Klara and the Sun for Today!`).
+     - Included an action button on the SnackBar (`View in Daily Pulse`) that switches the segmented stream switcher to the Daily Pulse tab.
+
+4. ✅ **Entertainment Label Management & Custom Tags System:**
+   - **Problem Statement:** Users could not assign labels when creating media items, nor edit or manage existing labels on media cards.
+   - **Architecture & Implementation Requirements:**
+     - **Add Media Modal:**
+       - Integrated a tag selector chip group with common presets (`Sci-Fi`, `Drama`, `Horror`, `Masterpiece`, `RPG`, `Ongoing`).
+       - Provided an inline text input `+ Add Tag` to create custom labels on the fly during media creation.
+     - **Edit Media & Label Management Modal:**
+       - Added an `Edit Labels` action on `MediaCard` (accessible from both List and Grid views).
+       - Dialog displays all currently assigned labels as removable chips (`[Tag ✕]`) and a suggestion bank of unused tags.
+       - Allows typing and appending new custom tags.
+     - **Persistence:** Save updated label lists to `MediaItem.labels` and sync via `StorageService.saveMediaItems`.
+     - Provided `MediaLabelService` with full suite of unit tests.
+
+5. ✅ **Interactive Media Daily Goal Submenu, Cap Validation & Automatic Progress Synchronization:**
+   - **Problem Statement:** Tapping "Schedule Today" defaulted to an arbitrary 1-unit stub without prompting the user for their target, without validating against remaining units, and without updating the media progress bar when marked Done.
+   - **Architecture & Implementation Requirements:**
+     - **Interactive Scheduling Modal ("Schedule Daily Goal"):**
+       - Opens on tapping `Schedule Today` on any `MediaCard`.
+       - Header: Media title, cover preview, and current status: `[Current] / [Total] [Units] ([X]%)` (e.g., `172 / 303 Pages (57%)`).
+       - Unit-aware prompt: `How many [Units] do you want to accomplish today?` (dynamically bound to `Pages`, `Episodes`, `Minutes`, `Chapters`).
+       - Numeric input field with quick-select incremental chips (`+5`, `+10`, `+25`, `Finish Item / Remaining [X]`).
+     - **Input Validation & Boundary Checking:**
+       - Validates that the input amount is strictly greater than 0 (`amount > 0`).
+       - Validates that the input amount does not exceed the remaining units (`amount <= progressTotal - progressCurrent`).
+       - Prevents progress from exceeding 100% of the total entertainment length.
+       - Displays inline error message and disables the `Schedule` button if the value is invalid or exceeds bounds.
+     - **Linked Task Creation:**
+       - Generates descriptive title: e.g., `Read 25 Pages of Klara and the Sun` or `Watch 3 Episodes of Succession`.
+       - Assigns `linkedMediaId: item.id`, `mediaUnitsToAdvance: amount`, `mediaTitle: item.title`, and `targetDateJalali: todayKey`.
+     - **CRITICAL: Automatic Progress Sync on Task Completion ("Done"):**
+       - In `_setTaskStatus(task, TaskStatus.done)`:
+         - When a task linked to media (`linkedMediaId != null`) is checked as `Done`:
+           - Locates the corresponding `MediaItem` in `_mediaItems`.
+           - Increments its `progressCurrent` by `task.mediaUnitsToAdvance` (capped at `progressTotal`).
+           - Persists the updated `_mediaItems` list to `StorageService`.
+           - Forces UI re-render so progress bars, percentages, and metrics update immediately in the Entertainment tab.
+           - Displays a celebratory completion notification: `🎉 Progress updated: [Title] is now at [Current]/[Total] [Units] ([X]%)!`.
+         - When untoggled from `Done` back to `pending`:
+           - Automatically decrements `progressCurrent` by `task.mediaUnitsToAdvance` (floored at 0) and persists to keep state strictly consistent.
+     - Implemented `MediaGoalSyncService` with unit tests for bounds validation, titling, and progress syncing.
 
 ---
 
